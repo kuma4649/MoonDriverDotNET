@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MoonDriverDotNETConsole": {
+      "commandName": "Project",
+      "commandLineArgs": "-SRC -i D:\\bootcamp\\FM音源\\data\\MDR\\O3D_REV2\\O3D001.MML"
+    }
+  }
+}
