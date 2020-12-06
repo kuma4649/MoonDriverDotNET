@@ -1,0 +1,4 @@
+﻿
+;Console向け
+E0600=MoonDriverDotNETConsoleの引数がありません\r\nUsage:  MoonDriverDotNETConsole [/DotNEToption] [/option] filename[.mdm] [filename[.M]]]\r\nDotNETOption:\r\n    -LOGLEVEL=[FATAL|ERROR|WARNING|INFO|DEBUG|TRACE] Set LOG Level.(Default:INFO)\r\n    -XML                                             output xml File\r\n    -SRC                                             output src Files\r\nOption:    
+E0601=.mdmファイルを指定してください
