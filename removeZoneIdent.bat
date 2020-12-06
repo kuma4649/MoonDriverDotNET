@@ -10,4 +10,4 @@ FOR %%a in (player\*.zip player\*.dll player\*.exe) do (echo . > %%a:Zone.Identi
 
 echo Š®—¹‚µ‚Ü‚µ‚½B
 pause
-echo on
+echo on 
