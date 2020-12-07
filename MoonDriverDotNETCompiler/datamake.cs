@@ -1331,12 +1331,12 @@ namespace MoonDriverDotNET.Compiler
                         //    case _SET_WTB_TONE:
                         //        setEffectSub(lptr, line, &status_end_flag, 0, _WTB_TONE_MAX, WTB_TONE_DEFINITION_IS_WRONG);
                         //        break;
-                        //    /* MoonDriver */
-                        //    // 波形音源音色
-                        //    case _SET_TONETBL:
-                        //        setEffectSub(lptr, line, &status_end_flag, 0, _TONETBL_MAX, TONETBL_DEFINITION_IS_WRONG);
-                        //        break;
-                        //    // FM音源音色
+                        /* MoonDriver */
+                        // 波形音源音色
+                        case _SET_TONETBL:
+                            setEffectSub(lbuf, line, ref status_end_flag, 0, _TONETBL_MAX, (int)enmErrNum.TONETBL_DEFINITION_IS_WRONG);
+                            break;
+                        // FM音源音色
                         case _SET_FMOP:
                         case _SET_FMOP_FOUR:
                             setEffectSub(lbuf, line, ref status_end_flag, 0, _OPL3TBL_MAX, (int)enmErrNum.FM_TONE_DEFINITION_IS_WRONG);
@@ -2956,112 +2956,119 @@ namespace MoonDriverDotNET.Compiler
         //        }
         //    }
 
-        //    /*--------------------------------------------------------------
-        //        ToneTableの取得
-        //     Input:
+        /*--------------------------------------------------------------
+            ToneTableの取得
+         Input:
 
-        //     Output:
-        //        無し
-        //    --------------------------------------------------------------*/
-        //    void getToneTable(LINE* lptr)
-        //    {
-        //        int line, i, no, end_flag, offset, num, cnt;
-        //        char* ptr;
+         Output:
+            無し
+        --------------------------------------------------------------*/
+        void getToneTable(LINE[] lptr)
+        {
+            int line, i, no, end_flag, offset, num, cnt;
+            string buf;int ptr;
 
-        //        cnt = 0;
+            cnt = 0;
 
-        //        for (line = 1; line <= lptr->line; line++)
-        //        {
-        //            /* 音色データ発見？ */
-        //            if (lptr[line].status == _SET_TONETBL)
-        //            {
-        //                no = lptr[line].param;              /* 音色番号取得 */
-        //                ptr = lptr[line].str;
-        //                ptr++;                              /* '{'の分を飛ばす */
-        //                tonetbl_tbl[no][0] = 0;
-        //                offset = 0;
-        //                i = 1;
-        //                end_flag = 0;
-        //                while (end_flag == 0)
-        //                {
-        //                    ptr = skipSpace(ptr);
-        //                    switch (*ptr)
-        //                    {
-        //                        case '}':
-        //                            end_flag = 1;
-        //                            line += offset;
-        //                            break;
-        //                        case '\0':
-        //                            offset++;
-        //                            if (line + offset <= lptr->line)
-        //                            {
-        //                                if ((lptr[line + offset].status & _SAME_LINE) == _SAME_LINE)
-        //                                {
-        //                                    ptr = lptr[line + offset].str;
-        //                                }
-        //                            }
-        //                            else
-        //                            {
-        //                                dispError(TONETBL_DEFINITION_IS_WRONG, lptr[line].filename, line + offset);
-        //                                tonetbl_tbl[no][0] = 0;
-        //                                line += offset;
-        //                                end_flag = 1;
-        //                            }
-        //                            break;
-        //                        default:
-        //                            num = Asc2Int(ptr, &cnt);
-        //                            if (cnt != 0)
-        //                            {
-        //                                tonetbl_tbl[no][i] = num;
-        //                                tonetbl_tbl[no][0]++;
-        //                                ptr += cnt;
-        //                                i++;
-        //                                if (i > 1024 + 1)
-        //                                {
-        //                                    dispError(ABNORMAL_PARAMETERS_OF_TONETBL, lptr[line + offset].filename, line + offset);
-        //                                    tonetbl_tbl[no][0] = 0;
-        //                                    line += offset;
-        //                                    end_flag = 1;
-        //                                }
-        //                            }
-        //                            else
-        //                            {
-        //                                dispError(TONETBL_DEFINITION_IS_WRONG, lptr[line + offset].filename, line + offset);
-        //                                tonetbl_tbl[no][0] = 0;
-        //                                line += offset;
-        //                                end_flag = 1;
-        //                            }
-        //                            break;
-        //                    }
-        //                    ptr = skipSpace(ptr);
-        //                    if (*ptr == ',')
-        //                    {
-        //                        ptr++;
-        //                    }
-        //                }
-        //                if ((i % 9) != 1)
-        //                {
-        //                    if (!error_flag)
-        //                    {
-        //                        dispError(ABNORMAL_PARAMETERS_OF_TONETBL, lptr[line].filename, line);
-        //                        tonetbl_tbl[no][0] = 0;
-        //                    }
-        //                }
+            for (line = 1; line < lptr.Length; line++)
+            {
+                /* 音色データ発見？ */
+                if (lptr[line].status == _SET_TONETBL)
+                {
+                    no = lptr[line].param;              /* 音色番号取得 */
+                    buf = lptr[line].str;
+                    ptr = 0;
+                    ptr++;                              /* '{'の分を飛ばす */
+                    tonetbl_tbl[no][0] = 0;
+                    offset = 0;
+                    i = 1;
+                    end_flag = 0;
+                    while (end_flag == 0)
+                    {
+                        ptr = str.skipSpace(buf, ptr);
+                        char c = (ptr < buf.Length) ? buf[ptr] : '\0';
+
+                        switch (c)
+                        {
+                            case '}':
+                                end_flag = 1;
+                                line += offset;
+                                break;
+                            case '\0':
+                                offset++;
+                                if (line + offset <= lptr.Length)//.line)
+                                {
+                                    if ((lptr[line + offset].status & _SAME_LINE) == _SAME_LINE)
+                                    {
+                                        buf = lptr[line + offset].str;
+                                        ptr = 0;
+                                    }
+                                }
+                                else
+                                {
+                                    dispError((int)enmErrNum.TONETBL_DEFINITION_IS_WRONG, lptr[line].filename, line + offset);
+                                    tonetbl_tbl[no][0] = 0;
+                                    line += offset;
+                                    end_flag = 1;
+                                }
+                                break;
+                            default:
+                                num = str.Asc2Int(buf, ptr, ref cnt);
+                                if (cnt != 0)
+                                {
+                                    tonetbl_tbl[no][i] = num;
+                                    tonetbl_tbl[no][0]++;
+                                    ptr += cnt;
+                                    i++;
+                                    if (i > 1024 + 1)
+                                    {
+                                        dispError((int)enmErrNum.ABNORMAL_PARAMETERS_OF_TONETBL, lptr[line + offset].filename, line + offset);
+                                        tonetbl_tbl[no][0] = 0;
+                                        line += offset;
+                                        end_flag = 1;
+                                    }
+                                }
+                                else
+                                {
+                                    dispError((int)enmErrNum.TONETBL_DEFINITION_IS_WRONG, lptr[line + offset].filename, line + offset);
+                                    tonetbl_tbl[no][0] = 0;
+                                    line += offset;
+                                    end_flag = 1;
+                                }
+                                break;
+                        }
+
+                        ptr = str.skipSpace(buf, ptr);
+                        c = (ptr < buf.Length) ? buf[ptr] : '\0';
+
+                        if (c == ',')
+                        {
+                            ptr++;
+                        }
+                    }
+                    if ((i % 9) != 1)
+                    {
+                        if (error_flag==0)
+                        {
+                            dispError((int)enmErrNum.ABNORMAL_PARAMETERS_OF_TONETBL, lptr[line].filename, line);
+                            tonetbl_tbl[no][0] = 0;
+                        }
+                    }
 
 
-        //                /* 音色定義だけど_SAME_LINEの時はエラー */
-        //            }
-        //            else if (lptr[line].status == (_SET_TONETBL | _SAME_LINE))
-        //            {
-        //                dispError(TONETBL_DEFINITION_IS_WRONG, lptr[line].filename, line);
-        //                /* インクルードファイル処理 */
-        //            }
-        //            else if (lptr[line].status == _INCLUDE)
-        //            {
-        //                getToneTable(lptr[line].inc_ptr);
-        //            }
-        //        }
-        //    }
+                    /* 音色定義だけど_SAME_LINEの時はエラー */
+                }
+                else if ((uint)lptr[line].status == (_SET_TONETBL | _SAME_LINE))
+                {
+                    dispError((int)enmErrNum.TONETBL_DEFINITION_IS_WRONG, lptr[line].filename, line);
+                    /* インクルードファイル処理 */
+                }
+                else if (lptr[line].status == _INCLUDE)
+                {
+                    getToneTable(lptr[line].inc_ptr);
+                }
+            }
+        }
 
         /*--------------------------------------------------------------
             OPL3OPの取得
@@ -4352,11 +4359,11 @@ namespace MoonDriverDotNET.Compiler
                         {
                             b = (byte)(tbl[i][k] & 0xff);
                             b2= (byte)(tbl[i][k + 1] & 0xff);
-                            fp.Add(new MmlDatum2(string.Format("\tdb\t${0:x02},${1:x02}\n", b, b2), -1, b, b2));
+                            fp.Add(new MmlDatum2(string.Format("\tdb\t${0:x02},${1:x02}\n", b, b2), -1, b,-1, b2));
                             s = (ushort)(tbl[i][k + 2] & 0xffff);
-                            fp.Add(new MmlDatum2(string.Format("\tdw\t${0:x04}\n", s), -1, (byte)s, (byte)(s >> 8)));
+                            fp.Add(new MmlDatum2(string.Format("\tdw\t${0:x04}\n", s), -1, (byte)s,-1, (byte)(s >> 8)));
                             s = (ushort)(tbl[i][k + 3] & 0xffff);
-                            fp.Add(new MmlDatum2(string.Format("\tdw\t{0}\n", s), -1, (byte)s, (byte)(s >> 8)));
+                            fp.Add(new MmlDatum2(string.Format("\tdw\t{0}\n", s), -1, (byte)s, -1, (byte)(s >> 8)));
                             fp.Add(new MmlDatum2(string.Format("\tdb\t${0:x02},${1:x02},${2:x02},${3:x02},${4:x02}\n"
                                 , tbl[i][k + 4] & 0xff
                                 , tbl[i][k + 5] & 0xff
@@ -4366,9 +4373,13 @@ namespace MoonDriverDotNET.Compiler
                                 )
                                 , -1
                                 , tbl[i][k + 4] & 0xff
+                                , -1
                                 , tbl[i][k + 5] & 0xff
+                                , -1
                                 , tbl[i][k + 6] & 0xff
+                                , -1
                                 , tbl[i][k + 7] & 0xff
+                                , -1
                                 , tbl[i][k + 8] & 0xff
                                 ));
 
@@ -4954,7 +4965,7 @@ namespace MoonDriverDotNET.Compiler
             List<int> lstInt = new List<int>();
             List<int[]> aryInt = new List<int[]>();
 
-            for (int i = 0; i < max - 1; i++)
+            for (int i = 0; i < max ; i++)
             {
                 if (i < ary.Length)
                 {
@@ -4978,12 +4989,12 @@ namespace MoonDriverDotNET.Compiler
                 else des += ", ";
             }
 
-            des += "$00";
+            //des += "$00";
             lstInt.Add(-1);
             lstInt.Add(0);
             aryInt.Add(lstInt.ToArray());
 
-            string[] sDes = des.Split(new string[] { "@@" }, StringSplitOptions.None);
+            string[] sDes = des.Split(new string[] { "@@" }, StringSplitOptions.RemoveEmptyEntries);
 
             for (int i = 0; i < sDes.Length; i++)
             {
@@ -5869,7 +5880,7 @@ namespace MoonDriverDotNET.Compiler
                                 ptr = setCommandBuf(1, cmd, cmdPtr, mml[i].num, buf, ptr, line, mml[i].check(trk));
                                 if ((mml[i].check(trk)) != 0)
                                 {
-                                    if (cmd[cmdPtr].param[0] == PARAM_OMITTED)
+                                    if ((uint)cmd[cmdPtr].param[0] == PARAM_OMITTED)
                                     {
                                         cmd[cmdPtr].param[0] = 1;
                                     }
@@ -5904,7 +5915,7 @@ namespace MoonDriverDotNET.Compiler
                                 ptr = setCommandBuf(1, cmd, cmdPtr, mml[i].num, buf, ptr, line, mml[i].check(trk));
                                 if ((mml[i].check(trk)) != 0)
                                 {
-                                    if (cmd[cmdPtr].param[0] == PARAM_OMITTED)
+                                    if ((uint)cmd[cmdPtr].param[0] == PARAM_OMITTED)
                                     {
                                         cmd[cmdPtr].param[0] = 1;
                                     }
@@ -6931,6 +6942,7 @@ namespace MoonDriverDotNET.Compiler
                                 else if (ptr[ptrPtr].cmd == (int)enmMML._TIE)
                                 {
                                     /* 連符中のタイは削除 */
+                                    if (cmd[cmdPtr] == null) cmd[cmdPtr] = new CMD();
                                     cmd[cmdPtr].filename = ptr[ptrPtr].filename;
                                     cmd[cmdPtr].cnt = 0;
                                     cmd[cmdPtr].frm = 0;
@@ -6940,6 +6952,7 @@ namespace MoonDriverDotNET.Compiler
                                 }
                                 else
                                 {
+                                    if (cmd[cmdPtr] == null) cmd[cmdPtr] = new CMD();
                                     cmd[cmdPtr].filename = ptr[ptrPtr].filename;
                                     cmd[cmdPtr].cnt = ptr[ptrPtr].cnt;
                                     cmd[cmdPtr].frm = ptr[ptrPtr].frm;
@@ -8571,7 +8584,7 @@ namespace MoonDriverDotNET.Compiler
                 //getXPCM(line_ptr[mml_idx]);
                 //getFMTone(line_ptr[mml_idx]);
                 //getWTBTone(line_ptr[mml_idx]);
-                //getToneTable(line_ptr[mml_idx]);
+                getToneTable(line_ptr[mml_idx]);
                 getOPL3tbl(line_ptr[mml_idx]);
                 //getVRC7Tone(line_ptr[mml_idx]);
                 //getN106Tone(line_ptr[mml_idx]);
@@ -8673,7 +8686,7 @@ namespace MoonDriverDotNET.Compiler
                 //writeEffectWave(fp, effect_wave_tbl, "fds", effect_wave_max);
                 ///* namco106音色書き込み */
                 //writeToneN106(fp, n106_tone_tbl, "n106", n106_tone_max);
-                efFp.Add(new MmlDatum2("db 0;dummy N106_channel", -1, 0));
+                efFp.Add(new MmlDatum2("db 0;dummy N106_channel\n", -1, 0));
                 ///* VRC7音色書き込み */
                 //writeToneVRC7(fp, vrc7_tone_tbl, "vrc7", vrc7_tone_max);
                 ///* DPCM書き込み */
@@ -8855,13 +8868,13 @@ namespace MoonDriverDotNET.Compiler
                 infp.Add(new MmlDatum2(string.Format("{0}\n", t), -5, t));
 
                 //fprintf( fp, "INITIAL_WAIT_FRM\t\tequ\t%2d\n", 0x26);
-                t = string.Format("PITCH_CORRECTION\t\tequ\t{0:d2}", pitch_correction);
+                t = string.Format("PITCH_CORRECTION\t\tequ\t{0:d}", pitch_correction);
                 infp.Add(new MmlDatum2(string.Format("{0}\n", t), -5, t));
-                t = string.Format("DPCM_RESTSTOP\t\tequ\t{0:d2}", dpcm_reststop);
+                t = string.Format("DPCM_RESTSTOP\t\tequ\t{0:d}", dpcm_reststop);
                 infp.Add(new MmlDatum2(string.Format("{0}\n", t), -5, t));
-                t = string.Format("DPCM_BANKSWITCH\t\tequ\t{0:d2}", dpcm_bankswitch);
+                t = string.Format("DPCM_BANKSWITCH\t\tequ\t{0:d}", dpcm_bankswitch);
                 infp.Add(new MmlDatum2(string.Format("{0}\n", t), -5, t));
-                t = string.Format("DPCM_EXTRA_BANK_START\t\tequ\t{0:d2}", bank_maximum + 1);
+                t = string.Format("DPCM_EXTRA_BANK_START\t\tequ\t{0:d}", bank_maximum + 1);
                 infp.Add(new MmlDatum2(string.Format("{0}\n", t), -5, t));
                 t = string.Format("BANK_MAX_IN_4KB\t\tequ\t({0:d} + {1:d})*2+1", bank_maximum, dpcm_extra_bank_num);
                 infp.Add(new MmlDatum2(string.Format("{0}\n", t), -5, t));
