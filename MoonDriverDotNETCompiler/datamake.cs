@@ -19,7 +19,10 @@ namespace MoonDriverDotNET.Compiler
             for (int i = 0; i < tone_tbl.Length; i++) tone_tbl[i] = new int[1024];
             for (int i = 0; i < envelope_tbl.Length; i++) envelope_tbl[i] = new int[1024];
             for (int i = 0; i < pitch_env_tbl.Length; i++) pitch_env_tbl[i] = new int[1024];
+            for (int i = 0; i < pitch_mod_tbl.Length; i++) pitch_mod_tbl[i] = new int[5];
             for (int i = 0; i < arpeggio_tbl.Length; i++) arpeggio_tbl[i] = new int[1024];
+            for (int i = 0; i < hard_effect_tbl.Length; i++) hard_effect_tbl[i] = new int[5];
+            for (int i = 0; i < effect_wave_tbl.Length; i++) effect_wave_tbl[i] = new int[33];
 
             for (int i = 0; i < tonetbl_tbl.Length; i++) tonetbl_tbl[i] = new int[1024 + 2];
             for (int i = 0; i < opl3op_tbl.Length; i++) opl3op_tbl[i] = new int[1024 + 2];
@@ -178,13 +181,13 @@ namespace MoonDriverDotNET.Compiler
         private int[][] tone_tbl = new int[_TONE_MAX][];//[1024];	// Tone
         private int[][] envelope_tbl = new int[_ENVELOPE_MAX][];//[1024];	// Envelope
         private int[][] pitch_env_tbl = new int[_PITCH_ENV_MAX][];//[1024];	// Pitch Envelope
-        private int[][] pitch_mod_tbl;//[_PITCH_MOD_MAX][   5];	// LFO
+        private int[][] pitch_mod_tbl = new int[_PITCH_MOD_MAX][];//[   5];	// LFO
         private int[][] arpeggio_tbl = new int[_ARPEGGIO_MAX][];//[1024];	// Arpeggio
         private int[][] fm_tone_tbl;//[_FM_TONE_MAX][2+64];	// FM Tone
         private int[][] vrc7_tone_tbl;//[_VRC7_TONE_MAX][2+64];	// VRC7 Tone(配列数は使用関数の関係)
         private int[][] n106_tone_tbl;//[_N106_TONE_MAX][2+64];	// NAMCO106 Tone
-        private int[][] hard_effect_tbl;//[_HARD_EFFECT_MAX][5];	// FDS Hardware Effect
-        private int[][] effect_wave_tbl;//[_EFFECT_WAVE_MAX][33];	// Effect Wave (4088) Data
+        private int[][] hard_effect_tbl = new int[_HARD_EFFECT_MAX][];//[5];	// FDS Hardware Effect
+        private int[][] effect_wave_tbl = new int[_EFFECT_WAVE_MAX][];//[33];	// Effect Wave (4088) Data
 
         private int[][] wtb_tone_tbl;//[_WTB_TONE_MAX][2+64];		// HuSIC WaveTable Tone
 
@@ -489,7 +492,7 @@ namespace MoonDriverDotNET.Compiler
         private const uint _SAME_LINE = 0x8000_0000;
 
         private const int _TRACK_MAX = (24 + 18);
-        //				 012345678901234567890123012345678901234567
+        //                  			   012345678901234567890123012345678901234567
         private const string _TRACK_STR = "ABCDEFGHIJKLMNOPQRSTUVWXabcdefghijklmnopqr";
 
         private int BTRACK(int a) { return a; }
@@ -1256,81 +1259,81 @@ namespace MoonDriverDotNET.Compiler
                     }
                     else
                     {
-                        throw new NotImplementedException();
-                        //    lptr[line].status = -1;
-                        //    lptr[line].str = skipSpace(ptr);
+                        lbuf[lptr+line].status = -1;
+                        lbuf[lptr + line].str = ln.Substring(str.skipSpace(ln, ptr));
                     }
 
                     ptr = changeNULL(ptr, ref ln);
 
                     switch (lbuf[lptr + line].status)
                     {
-                        //    /* Includeコマンドの処理 */
-                        //    case _INCLUDE:
-                        //        if (inc_nest > 16)
-                        //        {               /* ネストは16段まで(再帰で呼ばれると終了しないので) */
-                        //            dispWarning(TOO_MANY_INCLUDE_FILES, lptr[line].filename, line);
-                        //            lptr[line].status = 0;
-                        //        }
-                        //        else
-                        //        {
-                        //            LINE* ltemp;
-                        //            temp = skipSpaceOld(lptr[line].str); /* /をとばさないようにしてみる */
-                        //            ltemp = readMmlFile(temp, temp);
-                        //            if (ltemp != NULL)
-                        //            {
-                        //                lptr[line].inc_ptr = ltemp;
-                        //                ++inc_nest;
-                        //                getLineStatus(lptr[line].inc_ptr, inc_nest);
-                        //                --inc_nest;
-                        //            }
-                        //            else
-                        //            {
-                        //                lptr[line].status = 0;                  /* ファイル読み込み失敗に付きエラー */
-                        //                error_flag = 1;
-                        //            }
-                        //        }
-                        //        break;
-                        //    /* LFOコマンド */
-                        //    case _SET_PITCH_MOD:
-                        //        setEffectSub(lptr, line, &status_end_flag, 0, _PITCH_MOD_MAX, LFO_DEFINITION_IS_WRONG);
-                        //        break;
+                        /* Includeコマンドの処理 */
+                        case _INCLUDE:
+                            if (inc_nest > 16)
+                            {               /* ネストは16段まで(再帰で呼ばれると終了しないので) */
+                                dispWarning((int)enmSys.TOO_MANY_INCLUDE_FILES, lbuf[lptr + line].filename, line);
+                                lbuf[lptr + line].status = 0;
+                            }
+                            else
+                            {
+                                LINE[] ltemp;
+                                temp = lbuf[lptr + line].str;
+                                tempPtr = str.skipSpaceOld(lbuf[line].str, lptr); /* /をとばさないようにしてみる */
+                                ltemp = readMmlFile(temp, temp);
+                                if (ltemp != null)
+                                {
+                                    lbuf[lptr + line].inc_ptr = ltemp;
+                                    ++inc_nest;
+                                    getLineStatus(lbuf[lptr + line].inc_ptr, inc_nest);
+                                    --inc_nest;
+                                }
+                                else
+                                {
+                                    lbuf[lptr + line].status = 0; /* ファイル読み込み失敗に付きエラー */
+                                    error_flag = 1;
+                                }
+                            }
+                            break;
+                        /* LFOコマンド */
+                        case _SET_PITCH_MOD:
+                            setEffectSub(lbuf, line, ref status_end_flag, 0, _PITCH_MOD_MAX, (int)enmErrNum.LFO_DEFINITION_IS_WRONG);
+                            break;
                         /* ピッチエンベロープコマンド */
                         case _SET_PITCH_ENV:
                             setEffectSub(lbuf, line, ref status_end_flag, 0, _PITCH_ENV_MAX, (int)enmErrNum.PITCH_ENVELOPE_DEFINITION_IS_WRONG);
                             break;
-                        //    /* 音量エンベロープコマンド */
-                        //    case _SET_ENVELOPE:
-                        //        setEffectSub(lptr, line, &status_end_flag, 0, _ENVELOPE_MAX, ENVELOPE_DEFINITION_IS_WRONG);
-                        //        break;
-                        //    /* 自作音色 */
-                        //    case _SET_TONE:
-                        //        setEffectSub(lptr, line, &status_end_flag, 0, _TONE_MAX, TONE_DEFINITION_IS_WRONG);
-                        //        break;
-                        //    /* アルペジオ */
-                        //    case _SET_ARPEGGIO:
-                        //        setEffectSub(lptr, line, &status_end_flag, 0, _ARPEGGIO_MAX, NOTE_ENVELOPE_DEFINITION_IS_WRONG);
-                        //        break;
-                        //    /* DPCM登録コマンド */
-                        //    case _SET_DPCM_DATA:
-                        //        setEffectSub(lptr, line, &status_end_flag, 0, _DPCM_MAX, DPCM_DEFINITION_IS_WRONG);
-                        //        break;
-                        //    /* VRC7 Tone */
-                        //    case _SET_VRC7_TONE:
-                        //        setEffectSub(lptr, line, &status_end_flag, 0, _VRC7_TONE_MAX, FM_TONE_DEFINITION_IS_WRONG);
-                        //        break;
-                        //    /* FM音色 */
-                        //    case _SET_FM_TONE:
-                        //        setEffectSub(lptr, line, &status_end_flag, 0, _DPCM_MAX, FM_TONE_DEFINITION_IS_WRONG);
-                        //        break;
-                        //    /* HuSIC XPCM */
-                        //    case _SET_XPCM_DATA:
-                        //        setEffectSub(lptr, line, &status_end_flag, 0, _FM_TONE_MAX, XPCM_DEFINITION_IS_WRONG);
-                        //        break;
-                        //    /* HuSIC WTB */
-                        //    case _SET_WTB_TONE:
-                        //        setEffectSub(lptr, line, &status_end_flag, 0, _WTB_TONE_MAX, WTB_TONE_DEFINITION_IS_WRONG);
-                        //        break;
+                        /* 音量エンベロープコマンド */
+                        case _SET_ENVELOPE:
+                            setEffectSub(lbuf, line, ref status_end_flag, 0, _ENVELOPE_MAX, (int)enmErrNum.ENVELOPE_DEFINITION_IS_WRONG);
+                            break;
+                        /* 自作音色 */
+                        case _SET_TONE:
+                            setEffectSub(lbuf, line, ref status_end_flag, 0, _TONE_MAX, (int)enmErrNum.TONE_DEFINITION_IS_WRONG);
+                            break;
+                        /* アルペジオ */
+                        case _SET_ARPEGGIO:
+                            setEffectSub(lbuf, line, ref status_end_flag, 0, _ARPEGGIO_MAX, (int)enmErrNum.NOTE_ENVELOPE_DEFINITION_IS_WRONG);
+                            break;
+                        /* DPCM登録コマンド */
+                        case _SET_DPCM_DATA:
+                            setEffectSub(lbuf, line, ref status_end_flag, 0, _DPCM_MAX, (int)enmErrNum.DPCM_DEFINITION_IS_WRONG);
+                            break;
+                        /* VRC7 Tone */
+                        case _SET_VRC7_TONE:
+                            setEffectSub(lbuf, line, ref status_end_flag, 0, _VRC7_TONE_MAX, (int)enmErrNum.FM_TONE_DEFINITION_IS_WRONG);
+                            break;
+                        /* FM音色 */
+                        case _SET_FM_TONE:
+                            setEffectSub(lbuf, line, ref status_end_flag, 0, _DPCM_MAX, (int)enmErrNum.FM_TONE_DEFINITION_IS_WRONG);
+                            break;
+                        ///* HuSIC XPCM */
+                        //case _SET_XPCM_DATA:
+                        //    setEffectSub(lbuf, line, ref status_end_flag, 0, _FM_TONE_MAX, (int)enmErrNum.XPCM_DEFINITION_IS_WRONG);
+                        //    break;
+                        ///* HuSIC WTB */
+                        //case _SET_WTB_TONE:
+                        //    setEffectSub(lbuf, line, ref status_end_flag, 0, _WTB_TONE_MAX, (int)enmErrNum.WTB_TONE_DEFINITION_IS_WRONG);
+                        //    break;
                         /* MoonDriver */
                         // 波形音源音色
                         case _SET_TONETBL:
@@ -1357,14 +1360,14 @@ namespace MoonDriverDotNET.Compiler
                         //    case _SET_N106_TONE:
                         //        setEffectSub(lptr, line, &status_end_flag, 0, _N106_TONE_MAX, N106_TONE_DEFINITION_IS_WRONG);
                         //        break;
-                        //    /* ハードウェアエフェクト */
-                        //    case _SET_HARD_EFFECT:
-                        //        setEffectSub(lptr, line, &status_end_flag, 0, _HARD_EFFECT_MAX, HARD_EFFECT_DEFINITION_IS_WRONG);
-                        //        break;
-                        //    /* エフェクト波形 */
-                        //    case _SET_EFFECT_WAVE:
-                        //        setEffectSub(lptr, line, &status_end_flag, 0, _EFFECT_WAVE_MAX, EFFECT_WAVE_DEFINITION_IS_WRONG);
-                        //        break;
+                        /* ハードウェアエフェクト */
+                        case _SET_HARD_EFFECT:
+                            setEffectSub(lbuf, line, ref status_end_flag, 0, _HARD_EFFECT_MAX, (int)enmErrNum.HARD_EFFECT_DEFINITION_IS_WRONG);
+                            break;
+                        /* エフェクト波形 */
+                        case _SET_EFFECT_WAVE:
+                            setEffectSub(lbuf, line, ref status_end_flag, 0, _EFFECT_WAVE_MAX, (int)enmErrNum.EFFECT_WAVE_DEFINITION_IS_WRONG);
+                            break;
                         //    /* DISKSYSTEM FM音源使用フラグ */
                         //    case _EX_DISKFM:
                         //        sndgen_flag |= BDISKFM;
@@ -1601,10 +1604,10 @@ namespace MoonDriverDotNET.Compiler
                         //        }
                         //        break;
 
-                        //    /*	*/
-                        //    case _EFFECT_INCLUDE:
-                        //        include_flag = 1;
-                        //        break;
+                        ///*	*/
+                        //case _EFFECT_INCLUDE:
+                        //    include_flag = 1;
+                        //    break;
                         /* タイトル */
                         case _TITLE:
                             //tempPtr = str.skipSpaceOld(lbuf[lptr + line].str, 0);
@@ -1638,51 +1641,56 @@ namespace MoonDriverDotNET.Compiler
                             programer_buf = programer_buf.Substring(0, Math.Min(programer_buf.Length, 1023));
                             programer = programer_buf;
                             break;
-                        //    /* PCMファイル */
-                        //    case _PCM_FILE:
-                        //        temp = skipSpaceOld(lptr[line].str);
-                        //        strncpy(pcm_name, temp, 1023);
-                        //        use_pcm = 1;
-                        //        break;
+                        /* PCMファイル */
+                        case _PCM_FILE:
+                            temp = lbuf[line].str;
+                            tempPtr = str.skipSpaceOld(lbuf[line].str, lptr);
+                            pcm_name = temp.Substring(tempPtr);//, 1023);
+                            use_pcm = 1;
+                            break;
 
-                        //    /* オクターブ記号の反転 */
-                        //    case _OCTAVE_REV:
-                        //        temp = skipSpace(lptr[line].str);
-                        //        param = Asc2Int(temp, &cnt);
-                        //        if (cnt != 0)
-                        //        {
-                        //            if (param == 0)
-                        //            {
-                        //                octave_flag = 0;
-                        //            }
-                        //            else
-                        //            {
-                        //                octave_flag = 1;
-                        //            }
-                        //        }
-                        //        else
-                        //        {
-                        //            octave_flag = 1;
-                        //        }
-                        //        break;
-                        //    /* qコマンド分母変更 */
-                        //    case _GATE_DENOM:
-                        //        temp = skipSpace(lptr[line].str);
-                        //        param = Asc2Int(temp, &cnt);
-                        //        if (cnt != 0 && param > 0)
-                        //        {
-                        //            gate_denom = param;
-                        //        }
-                        //        else
-                        //        {
-                        //            dispError(DEFINITION_IS_WRONG, lptr[line].filename, line);
-                        //            lptr[line].status = 0;
-                        //        }
-                        //        break;
-                        //    /*ディチューン、ピッチエンベロープ、LFOの方向修正 */
-                        //    case _PITCH_CORRECTION:
-                        //        pitch_correction = 1;
-                        //        break;
+                        /* オクターブ記号の反転 */
+                        case _OCTAVE_REV:
+                            temp = lbuf[line].str;
+                            tempPtr = str.skipSpace(lbuf[line].str, lptr);
+                            cnt = 0;
+                            param = str.Asc2Int(temp, tempPtr, ref cnt);
+                            if (cnt != 0)
+                            {
+                                if (param == 0)
+                                {
+                                    octave_flag = 0;
+                                }
+                                else
+                                {
+                                    octave_flag = 1;
+                                }
+                            }
+                            else
+                            {
+                                octave_flag = 1;
+                            }
+                            break;
+                        /* qコマンド分母変更 */
+                        case _GATE_DENOM:
+                            temp = lbuf[line].str;
+                            tempPtr = str.skipSpace(lbuf[line].str, lptr);
+                            cnt = 0;
+                            param = str.Asc2Int(temp, tempPtr, ref cnt);
+                            if (cnt != 0 && param > 0)
+                            {
+                                gate_denom = param;
+                            }
+                            else
+                            {
+                                dispError((int)enmErrNum.DEFINITION_IS_WRONG, lbuf[lptr + line].filename, line);
+                                lbuf[lptr + line].status = 0;
+                            }
+                            break;
+                        /*ディチューン、ピッチエンベロープ、LFOの方向修正 */
+                        case _PITCH_CORRECTION:
+                            pitch_correction = 1;
+                            break;
                         /* ヘッダ無し */
                         case -1:
                             if ((lbuf[lptr + line - 1].status & _SET_EFFECT) != 0)
@@ -1828,113 +1836,121 @@ namespace MoonDriverDotNET.Compiler
 
 
 
-        //    /*--------------------------------------------------------------
-        //        エンベロープの取得
-        //     Input:
+        /*--------------------------------------------------------------
+            エンベロープの取得
+         Input:
 
-        //     Output:
-        //        無し
-        //    --------------------------------------------------------------*/
-        //    void getEnvelope(LINE* lptr)
-        //    {
-        //        int line, i, no, end_flag, offset, num, cnt;
-        //        char* ptr;
+         Output:
+            無し
+        --------------------------------------------------------------*/
+        void getEnvelope(LINE[] lptr)
+        {
+            int line, i, no, end_flag, offset, num, cnt;
+            string buf;int ptr;
 
-        //        cnt = 0;
+            cnt = 0;
 
-        //        for (line = 1; line <= lptr->line; line++)
-        //        {
-        //            /* エンベロープデータ発見？ */
-        //            if (lptr[line].status == _SET_ENVELOPE)
-        //            {
-        //                no = lptr[line].param;              /* エンベロープ番号取得 */
-        //                ptr = lptr[line].str;
-        //                ptr++;                              /* '{'の分を飛ばす */
-        //                if (envelope_tbl[no][0] != 0)
-        //                {
-        //                    dispWarning(THIS_NUMBER_IS_ALREADY_USED, lptr[line].filename, line);
-        //                }
-        //                envelope_tbl[no][0] = 0;
-        //                offset = 0;
-        //                i = 1;
-        //                end_flag = 0;
-        //                while (end_flag == 0)
-        //                {
-        //                    ptr = skipSpace(ptr);
-        //                    switch (*ptr)
-        //                    {
-        //                        case '}':
-        //                            if (envelope_tbl[no][0] >= 1)
-        //                            {
-        //                                envelope_tbl[no][i] = EFTBL_END;
-        //                                envelope_tbl[no][0]++;
-        //                            }
-        //                            else
-        //                            {
-        //                                dispError(PARAMETER_IS_LACKING, lptr[line].filename, line);
-        //                                envelope_tbl[no][0] = 0;
-        //                            }
-        //                            end_flag = 1;
-        //                            line += offset;
-        //                            break;
-        //                        case '|':
-        //                            envelope_tbl[no][i] = EFTBL_LOOP;
-        //                            envelope_tbl[no][0]++;
-        //                            i++;
-        //                            ptr++;
-        //                            break;
-        //                        case '\0':
-        //                            offset++;
-        //                            if (line + offset <= lptr->line)
-        //                            {
-        //                                if ((lptr[line + offset].status & _SAME_LINE) == _SAME_LINE)
-        //                                {
-        //                                    ptr = lptr[line + offset].str;
-        //                                }
-        //                            }
-        //                            else
-        //                            {
-        //                                dispError(ENVELOPE_DEFINITION_IS_WRONG, lptr[line].filename, line);
-        //                                envelope_tbl[no][0] = 0;
-        //                                end_flag = 1;
-        //                            }
-        //                            break;
-        //                        default:
-        //                            num = Asc2Int(ptr, &cnt);
-        //                            if (cnt != 0 && (0 <= num && num <= 127))
-        //                            {
-        //                                envelope_tbl[no][i] = num;
-        //                                envelope_tbl[no][0]++;
-        //                                ptr += cnt;
-        //                                i++;
-        //                            }
-        //                            else
-        //                            {
-        //                                dispError(ENVELOPE_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
-        //                                envelope_tbl[no][0] = 0;
-        //                                end_flag = 1;
-        //                            }
-        //                            break;
-        //                    }
-        //                    ptr = skipSpace(ptr);
-        //                    if (*ptr == ',')
-        //                    {
-        //                        ptr++;
-        //                    }
-        //                }
-        //                /* エンベロープ定義だけど_SAME_LINEの時はエラー */
-        //            }
-        //            else if (lptr[line].status == (_SET_ENVELOPE | _SAME_LINE))
-        //            {
-        //                dispError(ENVELOPE_DEFINITION_IS_WRONG, lptr[line].filename, line);
-        //                /* インクルードファイル処理 */
-        //            }
-        //            else if (lptr[line].status == _INCLUDE)
-        //            {
-        //                getEnvelope(lptr[line].inc_ptr);
-        //            }
-        //        }
-        //    }
+            for (line = 1; line < lptr.Length; line++)
+            {
+                /* エンベロープ定義だけど_SAME_LINEの時はエラー */
+                if (lptr[line].status == (_SET_ENVELOPE | unchecked((int)_SAME_LINE)))
+                {
+                    dispError((int)enmErrNum.ENVELOPE_DEFINITION_IS_WRONG, lptr[line].filename, line);
+                    continue;
+                }
+
+                /* インクルードファイル処理 */
+                if (lptr[line].status == _INCLUDE)
+                {
+                    getEnvelope(lptr[line].inc_ptr);
+                    continue;
+                }
+
+                /* エンベロープデータ発見？ */
+                if (lptr[line].status == _SET_ENVELOPE)
+                {
+                    no = lptr[line].param;              /* エンベロープ番号取得 */
+                    buf = lptr[line].str;
+                    ptr = 0;
+                    ptr++;                              /* '{'の分を飛ばす */
+                    if (envelope_tbl[no][0] != 0)
+                    {
+                        dispWarning((int)enmSys.THIS_NUMBER_IS_ALREADY_USED, lptr[line].filename, line);
+                    }
+                    envelope_tbl[no][0] = 0;
+                    offset = 0;
+                    i = 1;
+                    end_flag = 0;
+                    while (end_flag == 0)
+                    {
+                        ptr = str.skipSpace(buf, ptr);
+                        char c = (ptr < buf.Length) ? buf[ptr] : '\0';
+                        switch (c)
+                        {
+                            case '}':
+                                if (envelope_tbl[no][0] >= 1)
+                                {
+                                    envelope_tbl[no][i] = (int)enmEFTBL.END; ;
+                                    envelope_tbl[no][0]++;
+                                }
+                                else
+                                {
+                                    dispError((int)enmErrNum.PARAMETER_IS_LACKING, lptr[line].filename, line);
+                                    envelope_tbl[no][0] = 0;
+                                }
+                                end_flag = 1;
+                                line += offset;
+                                break;
+                            case '|':
+                                pitch_env_tbl[no][i] = (int)enmEFTBL.LOOP;
+                                envelope_tbl[no][0]++;
+                                i++;
+                                ptr++;
+                                break;
+                            case '\0':
+                                offset++;
+                                if (line + offset < lptr.Length)
+                                {
+                                    if ((lptr[line + offset].status & _SAME_LINE) == _SAME_LINE)
+                                    {
+                                        buf = lptr[line + offset].str;
+                                        ptr = 0;
+                                    }
+                                }
+                                else
+                                {
+                                    dispError((int)enmErrNum.ENVELOPE_DEFINITION_IS_WRONG, lptr[line].filename, line);
+                                    envelope_tbl[no][0] = 0;
+                                    end_flag = 1;
+                                }
+                                break;
+                            default:
+                                num = str.Asc2Int(buf, ptr, ref cnt);
+                                if (cnt != 0 && (0 <= num && num <= 127))
+                                {
+                                    envelope_tbl[no][i] = num;
+                                    envelope_tbl[no][0]++;
+                                    ptr += cnt;
+                                    i++;
+                                }
+                                else
+                                {
+                                    dispError((int)enmErrNum.ENVELOPE_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
+                                    envelope_tbl[no][0] = 0;
+                                    end_flag = 1;
+                                }
+                                break;
+                        }
+                        ptr = str.skipSpace(buf, ptr);
+                        c = (ptr < buf.Length) ? buf[ptr] : '\0';
+                        if (c == ',')
+                        {
+                            ptr++;
+                        }
+                    }
+                }
+            }
+        }
 
         /*--------------------------------------------------------------
             ピッチエンベロープの取得
@@ -2061,259 +2077,269 @@ namespace MoonDriverDotNET.Compiler
             }
         }
 
-        //    /*--------------------------------------------------------------
-        //        ピッチモジュレーションの取得
-        //     Input:
+        /*--------------------------------------------------------------
+            ピッチモジュレーションの取得
+         Input:
 
-        //     Output:
-        //        無し
-        //    --------------------------------------------------------------*/
-        //    void getPitchMod(LINE* lptr)
-        //    {
-        //        int line, i, no, end_flag, offset, num, cnt;
-        //        char* ptr;
+         Output:
+            無し
+        --------------------------------------------------------------*/
+        private void getPitchMod(LINE[] lptr)
+        {
+            int line, i, no, end_flag, offset, num, cnt;
+            string buf; int ptr;
 
-        //        cnt = 0;
+            cnt = 0;
 
-        //        for (line = 1; line <= lptr->line; line++)
-        //        {
-        //            /* 音色データ発見？ */
-        //            if (lptr[line].status == _SET_PITCH_MOD)
-        //            {
-        //                no = lptr[line].param;              /* LFO番号取得 */
-        //                ptr = lptr[line].str;
-        //                ptr++;                              /* '{'の分を飛ばす */
-        //                if (pitch_mod_tbl[no][0] != 0)
-        //                {
-        //                    dispWarning(THIS_NUMBER_IS_ALREADY_USED, lptr[line].filename, line);
-        //                }
-        //                pitch_mod_tbl[no][0] = 0;
-        //                offset = 0;
-        //                i = 1;
-        //                end_flag = 0;
-        //                while (end_flag == 0)
-        //                {
-        //                    ptr = skipSpace(ptr);
-        //                    switch (*ptr)
-        //                    {
-        //                        case '}':
-        //                            if (pitch_mod_tbl[no][0] >= 3)
-        //                            {
-        //                                //OK.
-        //                            }
-        //                            else
-        //                            {
-        //                                dispError(PARAMETER_IS_LACKING, lptr[line].filename, line);
-        //                                pitch_mod_tbl[no][0] = 0;
-        //                            }
-        //                            end_flag = 1;
-        //                            line += offset;
-        //                            break;
-        //                        case '\0':
-        //                            offset++;
-        //                            if (line + offset <= lptr->line)
-        //                            {
-        //                                if ((lptr[line + offset].status & _SAME_LINE) == _SAME_LINE)
-        //                                {
-        //                                    ptr = lptr[line + offset].str;
-        //                                }
-        //                            }
-        //                            else
-        //                            {
-        //                                dispError(LFO_DEFINITION_IS_WRONG, lptr[line].filename, line);
-        //                                pitch_mod_tbl[no][0] = 0;
-        //                                end_flag = 1;
-        //                            }
-        //                            break;
-        //                        default:
-        //                            num = Asc2Int(ptr, &cnt);
-        //                            if (cnt != 0)
-        //                            {
-        //                                switch (i)
-        //                                {
-        //                                    case 1:
-        //                                    case 2:
-        //                                    case 3:
-        //                                        if (0 <= num && num <= 255)
-        //                                        {
-        //                                            pitch_mod_tbl[no][i] = num;
-        //                                            pitch_mod_tbl[no][0]++;
-        //                                            ptr += cnt;
-        //                                            i++;
-        //                                        }
-        //                                        else
-        //                                        {
-        //                                            dispError(LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
-        //                                            pitch_mod_tbl[no][0] = 0;
-        //                                            end_flag = 1;
-        //                                        }
-        //                                        break;
-        //                                    case 4:
-        //                                        if (0 <= num && num <= 255)
-        //                                        {
-        //                                            pitch_mod_tbl[no][i] = num;
-        //                                            pitch_mod_tbl[no][0]++;
-        //                                            ptr += cnt;
-        //                                            i++;
-        //                                        }
-        //                                        else
-        //                                        {
-        //                                            dispError(LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
-        //                                            pitch_mod_tbl[no][0] = 0;
-        //                                            end_flag = 1;
-        //                                        }
-        //                                        break;
-        //                                    default:
-        //                                        dispError(LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
-        //                                        pitch_mod_tbl[no][0] = 0;
-        //                                        end_flag = 1;
-        //                                        break;
-        //                                }
-        //                            }
-        //                            else
-        //                            {
-        //                                dispError(LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
-        //                                pitch_mod_tbl[no][0] = 0;
-        //                                end_flag = 1;
-        //                            }
-        //                            break;
-        //                    }
-        //                    ptr = skipSpace(ptr);
-        //                    if (*ptr == ',')
-        //                    {
-        //                        ptr++;
-        //                    }
-        //                }
-        //                /* 音色定義だけど_SAME_LINEの時はエラー */
-        //            }
-        //            else if (lptr[line].status == (_SET_PITCH_MOD | _SAME_LINE))
-        //            {
-        //                dispError(LFO_DEFINITION_IS_WRONG, lptr[line].filename, line);
-        //                /* インクルードファイル処理 */
-        //            }
-        //            else if (lptr[line].status == _INCLUDE)
-        //            {
-        //                getPitchMod(lptr[line].inc_ptr);
-        //            }
-        //        }
-        //    }
+            for (line = 1; line < lptr.Length; line++)
+            {
+                /* 音色定義だけど_SAME_LINEの時はエラー */
+                if (lptr[line].status == (_SET_PITCH_MOD | unchecked((int)_SAME_LINE)))
+                {
+                    dispError((int)enmErrNum.LFO_DEFINITION_IS_WRONG, lptr[line].filename, line);
+                }
+
+                /* インクルードファイル処理 */
+                if (lptr[line].status == _INCLUDE)
+                {
+                    getPitchMod(lptr[line].inc_ptr);
+                }
+
+                /* 音色データ発見？ */
+                if (lptr[line].status == _SET_PITCH_MOD)
+                {
+                    no = lptr[line].param;              /* LFO番号取得 */
+                    buf = lptr[line].str;
+                    ptr = 0;
+                    ptr++;                              /* '{'の分を飛ばす */
+                    if (pitch_mod_tbl[no][0] != 0)
+                    {
+                        dispWarning((int)enmSys.THIS_NUMBER_IS_ALREADY_USED, lptr[line].filename, line);
+                    }
+                    pitch_mod_tbl[no][0] = 0;
+                    offset = 0;
+                    i = 1;
+                    end_flag = 0;
+                    while (end_flag == 0)
+                    {
+                        ptr = str.skipSpace(buf, ptr);
+                        char c = (ptr < buf.Length) ? buf[ptr] : '\0';
+                        switch (c)
+                        {
+                            case '}':
+                                if (pitch_mod_tbl[no][0] >= 3)
+                                {
+                                    //OK.
+                                }
+                                else
+                                {
+                                    dispError((int)enmErrNum.PARAMETER_IS_LACKING, lptr[line].filename, line);
+                                    pitch_mod_tbl[no][0] = 0;
+                                }
+                                end_flag = 1;
+                                line += offset;
+                                break;
+                            case '\0':
+                                offset++;
+                                if (line + offset < lptr.Length)
+                                {
+                                    if ((lptr[line + offset].status & _SAME_LINE) == _SAME_LINE)
+                                    {
+                                        buf = lptr[line + offset].str;
+                                        ptr = 0;
+                                    }
+                                }
+                                else
+                                {
+                                    dispError((int)enmErrNum.LFO_DEFINITION_IS_WRONG, lptr[line].filename, line);
+                                    pitch_mod_tbl[no][0] = 0;
+                                    end_flag = 1;
+                                }
+                                break;
+                            default:
+                                num = str.Asc2Int(buf,ptr, ref cnt);
+                                if (cnt != 0)
+                                {
+                                    switch (i)
+                                    {
+                                        case 1:
+                                        case 2:
+                                        case 3:
+                                            if (0 <= num && num <= 255)
+                                            {
+                                                pitch_mod_tbl[no][i] = num;
+                                                pitch_mod_tbl[no][0]++;
+                                                ptr += cnt;
+                                                i++;
+                                            }
+                                            else
+                                            {
+                                                dispError((int)enmErrNum.LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
+                                                pitch_mod_tbl[no][0] = 0;
+                                                end_flag = 1;
+                                            }
+                                            break;
+                                        case 4:
+                                            if (0 <= num && num <= 255)
+                                            {
+                                                pitch_mod_tbl[no][i] = num;
+                                                pitch_mod_tbl[no][0]++;
+                                                ptr += cnt;
+                                                i++;
+                                            }
+                                            else
+                                            {
+                                                dispError((int)enmErrNum.LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
+                                                pitch_mod_tbl[no][0] = 0;
+                                                end_flag = 1;
+                                            }
+                                            break;
+                                        default:
+                                            dispError((int)enmErrNum.LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
+                                            pitch_mod_tbl[no][0] = 0;
+                                            end_flag = 1;
+                                            break;
+                                    }
+                                }
+                                else
+                                {
+                                    dispError((int)enmErrNum.LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
+                                    pitch_mod_tbl[no][0] = 0;
+                                    end_flag = 1;
+                                }
+                                break;
+                        }
+                        ptr = str.skipSpace(buf, ptr);
+                        c = (ptr < buf.Length) ? buf[ptr] : '\0';
+                        if (c == ',')
+                        {
+                            ptr++;
+                        }
+                    }
+                }
+            }
+        }
 
 
 
-        //    /*--------------------------------------------------------------
-        //        ノートエンベロープの取得
-        //     Input:
+        /*--------------------------------------------------------------
+            ノートエンベロープの取得
+         Input:
 
-        //     Output:
-        //        無し
-        //    --------------------------------------------------------------*/
-        //    void getArpeggio(LINE* lptr)
-        //    {
-        //        int line, i, no, end_flag, offset, num, cnt;
-        //        char* ptr;
+         Output:
+            無し
+        --------------------------------------------------------------*/
+        private void getArpeggio(LINE[] lptr)
+        {
+            int line, i, no, end_flag, offset, num, cnt;
+            string buf; int ptr;
 
-        //        cnt = 0;
+            cnt = 0;
 
-        //        for (line = 1; line <= lptr->line; line++)
-        //        {
-        //            /* アルペジオデータ発見？ */
-        //            if (lptr[line].status == _SET_ARPEGGIO)
-        //            {
-        //                no = lptr[line].param;              /* エンベロープ番号取得 */
-        //                ptr = lptr[line].str;
-        //                ptr++;                              /* '{'の分を飛ばす */
-        //                if (arpeggio_tbl[no][0] != 0)
-        //                {
-        //                    dispWarning(THIS_NUMBER_IS_ALREADY_USED, lptr[line].filename, line);
-        //                }
-        //                arpeggio_tbl[no][0] = 0;
-        //                offset = 0;
-        //                i = 1;
-        //                end_flag = 0;
-        //                while (end_flag == 0)
-        //                {
-        //                    ptr = skipSpace(ptr);
-        //                    switch (*ptr)
-        //                    {
-        //                        case '}':
-        //                            if (arpeggio_tbl[no][0] >= 1)
-        //                            {
-        //                                arpeggio_tbl[no][i] = EFTBL_END;
-        //                                arpeggio_tbl[no][0]++;
-        //                            }
-        //                            else
-        //                            {
-        //                                dispError(PARAMETER_IS_LACKING, lptr[line].filename, line);
-        //                                arpeggio_tbl[no][0] = 0;
-        //                            }
-        //                            end_flag = 1;
-        //                            line += offset;
-        //                            break;
-        //                        case '|':
-        //                            arpeggio_tbl[no][i] = EFTBL_LOOP;
-        //                            arpeggio_tbl[no][0]++;
-        //                            i++;
-        //                            ptr++;
-        //                            break;
-        //                        case '\0':
-        //                            offset++;
-        //                            if (line + offset <= lptr->line)
-        //                            {
-        //                                if ((lptr[line + offset].status & _SAME_LINE) == _SAME_LINE)
-        //                                {
-        //                                    ptr = lptr[line + offset].str;
-        //                                }
-        //                            }
-        //                            else
-        //                            {
-        //                                dispError(NOTE_ENVELOPE_DEFINITION_IS_WRONG, lptr[line].filename, line);
-        //                                arpeggio_tbl[no][0] = 0;
-        //                                end_flag = 1;
-        //                            }
-        //                            break;
-        //                        default:
-        //                            num = Asc2Int(ptr, &cnt);
-        //                            if (cnt != 0)
-        //                            {
-        //                                if (num >= 0)
-        //                                {
-        //                                    arpeggio_tbl[no][i] = num;
-        //                                }
-        //                                else
-        //                                {
-        //                                    arpeggio_tbl[no][i] = (-num) | 0x80;
-        //                                }
-        //                                arpeggio_tbl[no][0]++;
-        //                                ptr += cnt;
-        //                                i++;
-        //                            }
-        //                            else
-        //                            {
-        //                                dispError(NOTE_ENVELOPE_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
-        //                                arpeggio_tbl[no][0] = 0;
-        //                                end_flag = 1;
-        //                            }
-        //                            break;
-        //                    }
-        //                    ptr = skipSpace(ptr);
-        //                    if (*ptr == ',')
-        //                    {
-        //                        ptr++;
-        //                    }
-        //                }
-        //                /* アルペジオ定義だけど_SAME_LINEの時はエラー */
-        //            }
-        //            else if (lptr[line].status == (_SET_ARPEGGIO | _SAME_LINE))
-        //            {
-        //                dispError(NOTE_ENVELOPE_DEFINITION_IS_WRONG, lptr[line].filename, line);
-        //                /* インクルードファイル処理 */
-        //            }
-        //            else if (lptr[line].status == _INCLUDE)
-        //            {
-        //                getArpeggio(lptr[line].inc_ptr);
-        //            }
-        //        }
-        //    }
+            for (line = 1; line < lptr.Length; line++)
+            {
+                /* アルペジオデータ発見？ */
+                if (lptr[line].status == _SET_ARPEGGIO)
+                {
+                    no = lptr[line].param;              /* エンベロープ番号取得 */
+                    buf = lptr[line].str;
+                    ptr = 0;
+                    ptr++;                              /* '{'の分を飛ばす */
+                    if (arpeggio_tbl[no][0] != 0)
+                    {
+                        dispWarning((int)enmSys.THIS_NUMBER_IS_ALREADY_USED, lptr[line].filename, line);
+                    }
+                    arpeggio_tbl[no][0] = 0;
+                    offset = 0;
+                    i = 1;
+                    end_flag = 0;
+                    while (end_flag == 0)
+                    {
+                        ptr = str.skipSpace(buf, ptr);
+                        char c = (ptr < buf.Length) ? buf[ptr] : '\0';
+                        switch (c)
+                        {
+                            case '}':
+                                if (arpeggio_tbl[no][0] >= 1)
+                                {
+                                    arpeggio_tbl[no][i] =(int)enmEFTBL.END;
+                                    arpeggio_tbl[no][0]++;
+                                }
+                                else
+                                {
+                                    dispError((int)enmErrNum.PARAMETER_IS_LACKING, lptr[line].filename, line);
+                                    arpeggio_tbl[no][0] = 0;
+                                }
+                                end_flag = 1;
+                                line += offset;
+                                break;
+                            case '|':
+                                arpeggio_tbl[no][i] = (int)enmEFTBL.LOOP;
+                                arpeggio_tbl[no][0]++;
+                                i++;
+                                ptr++;
+                                break;
+                            case '\0':
+                                offset++;
+                                if (line + offset < lptr.Length)
+                                {
+                                    if ((lptr[line + offset].status & _SAME_LINE) == _SAME_LINE)
+                                    {
+                                        buf = lptr[line + offset].str;
+                                        ptr = 0;
+                                    }
+                                }
+                                else
+                                {
+                                    dispError((int)enmErrNum.NOTE_ENVELOPE_DEFINITION_IS_WRONG, lptr[line].filename, line);
+                                    arpeggio_tbl[no][0] = 0;
+                                    end_flag = 1;
+                                }
+                                break;
+                            default:
+                                num = str.Asc2Int(buf, ptr, ref cnt);
+                                if (cnt != 0)
+                                {
+                                    if (num >= 0)
+                                    {
+                                        arpeggio_tbl[no][i] = num;
+                                    }
+                                    else
+                                    {
+                                        arpeggio_tbl[no][i] = (-num) | 0x80;
+                                    }
+                                    arpeggio_tbl[no][0]++;
+                                    ptr += cnt;
+                                    i++;
+                                }
+                                else
+                                {
+                                    dispError((int)enmErrNum.NOTE_ENVELOPE_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
+                                    arpeggio_tbl[no][0] = 0;
+                                    end_flag = 1;
+                                }
+                                break;
+                        }
+                        ptr = str.skipSpace(buf, ptr);
+                        c = (ptr < buf.Length) ? buf[ptr] : '\0';
+                        if (c == ',')
+                        {
+                            ptr++;
+                        }
+                    }
+                    /* アルペジオ定義だけど_SAME_LINEの時はエラー */
+                }
+                else if (lptr[line].status == (_SET_ARPEGGIO | unchecked((int)_SAME_LINE)))
+                {
+                    dispError((int)enmErrNum.NOTE_ENVELOPE_DEFINITION_IS_WRONG, lptr[line].filename, line);
+                    /* インクルードファイル処理 */
+                }
+                else if (lptr[line].status == _INCLUDE)
+                {
+                    getArpeggio(lptr[line].inc_ptr);
+                }
+            }
+        }
 
 
 
@@ -3472,282 +3498,290 @@ namespace MoonDriverDotNET.Compiler
 
 
 
-        //    /*--------------------------------------------------------------
-        //        ハードウェアエフェクトの取得
-        //     Input:
+        /*--------------------------------------------------------------
+            ハードウェアエフェクトの取得
+         Input:
 
-        //     Output:
-        //        無し
-        //    --------------------------------------------------------------*/
-        //    void getHardEffect(LINE* lptr)
-        //    {
-        //        int line, i, no, end_flag, offset, num, cnt;
-        //        char* ptr;
+         Output:
+            無し
+        --------------------------------------------------------------*/
+        private void getHardEffect(LINE[] lptr)
+        {
+            int line, i, no, end_flag, offset, num, cnt;
+            string buf; int ptr;
 
-        //        cnt = 0;
+            cnt = 0;
 
-        //        for (line = 1; line <= lptr->line; line++)
-        //        {
-        //            /* 音色データ発見？ */
-        //            if (lptr[line].status == _SET_HARD_EFFECT)
-        //            {
-        //                no = lptr[line].param;              /* エフェクト番号取得 */
-        //                ptr = lptr[line].str;
-        //                ptr++;                              /* '{'の分を飛ばす */
-        //                if (hard_effect_tbl[no][0] != 0)
-        //                {
-        //                    dispWarning(THIS_NUMBER_IS_ALREADY_USED, lptr[line].filename, line);
-        //                }
-        //                hard_effect_tbl[no][0] = 0;
-        //                offset = 0;
-        //                i = 1;
-        //                end_flag = 0;
-        //                while (end_flag == 0)
-        //                {
-        //                    ptr = skipSpace(ptr);
-        //                    switch (*ptr)
-        //                    {
-        //                        case '}':
-        //                            if (hard_effect_tbl[no][0] == 4)
-        //                            {
-        //                                //OK.
-        //                            }
-        //                            else
-        //                            {
-        //                                dispError(PARAMETER_IS_LACKING, lptr[line].filename, line);
-        //                                hard_effect_tbl[no][0] = 0;
-        //                            }
-        //                            end_flag = 1;
-        //                            line += offset;
-        //                            break;
-        //                        case '\0':
-        //                            offset++;
-        //                            if (line + offset <= lptr->line)
-        //                            {
-        //                                if ((lptr[line + offset].status & _SAME_LINE) == _SAME_LINE)
-        //                                {
-        //                                    ptr = lptr[line + offset].str;
-        //                                }
-        //                            }
-        //                            else
-        //                            {
-        //                                dispError(LFO_DEFINITION_IS_WRONG, lptr[line].filename, line);
-        //                                hard_effect_tbl[no][0] = 0;
-        //                                end_flag = 1;
-        //                            }
-        //                            break;
-        //                        default:
-        //                            num = Asc2Int(ptr, &cnt);
-        //                            if (cnt != 0)
-        //                            {
-        //                                switch (i)
-        //                                {
-        //                                    case 1:
-        //                                        if (0 <= num && num <= 255)
-        //                                        {
-        //                                            hard_effect_tbl[no][i] = num;
-        //                                            hard_effect_tbl[no][0]++;
-        //                                            ptr += cnt;
-        //                                            i++;
-        //                                        }
-        //                                        else
-        //                                        {
-        //                                            dispError(LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
-        //                                            hard_effect_tbl[no][0] = 0;
-        //                                            end_flag = 1;
-        //                                        }
-        //                                        break;
-        //                                    case 2:
-        //                                        if (0 <= num && num <= 4095)
-        //                                        {
-        //                                            hard_effect_tbl[no][i] = num;
-        //                                            hard_effect_tbl[no][0]++;
-        //                                            ptr += cnt;
-        //                                            i++;
-        //                                        }
-        //                                        else
-        //                                        {
-        //                                            dispError(LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
-        //                                            hard_effect_tbl[no][0] = 0;
-        //                                            end_flag = 1;
-        //                                        }
-        //                                        break;
-        //                                    case 3:
-        //                                        if (0 <= num && num <= 255)
-        //                                        {
-        //                                            hard_effect_tbl[no][i] = num;
-        //                                            hard_effect_tbl[no][0]++;
-        //                                            ptr += cnt;
-        //                                            i++;
-        //                                        }
-        //                                        else
-        //                                        {
-        //                                            dispError(LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
-        //                                            hard_effect_tbl[no][0] = 0;
-        //                                            end_flag = 1;
-        //                                        }
-        //                                        break;
-        //                                    case 4:
-        //                                        if (0 <= num && num <= 7)
-        //                                        {
-        //                                            hard_effect_tbl[no][i] = num;
-        //                                            hard_effect_tbl[no][0]++;
-        //                                            ptr += cnt;
-        //                                            i++;
-        //                                        }
-        //                                        else
-        //                                        {
-        //                                            dispError(LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
-        //                                            hard_effect_tbl[no][0] = 0;
-        //                                            end_flag = 1;
-        //                                        }
-        //                                        break;
-        //                                    default:
-        //                                        dispError(LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
-        //                                        hard_effect_tbl[no][0] = 0;
-        //                                        end_flag = 1;
-        //                                        break;
-        //                                }
-        //                            }
-        //                            else
-        //                            {
-        //                                dispError(LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
-        //                                hard_effect_tbl[no][0] = 0;
-        //                                end_flag = 1;
-        //                            }
-        //                            break;
-        //                    }
-        //                    ptr = skipSpace(ptr);
-        //                    if (*ptr == ',')
-        //                    {
-        //                        ptr++;
-        //                    }
-        //                }
-        //                /* 音色定義だけど_SAME_LINEの時はエラー */
-        //            }
-        //            else if (lptr[line].status == (_SET_HARD_EFFECT | _SAME_LINE))
-        //            {
-        //                dispError(LFO_DEFINITION_IS_WRONG, lptr[line].filename, line);
-        //                /* インクルードファイル処理 */
-        //            }
-        //            else if (lptr[line].status == _INCLUDE)
-        //            {
-        //                getHardEffect(lptr[line].inc_ptr);
-        //            }
-        //        }
-        //    }
+            for (line = 1; line < lptr.Length; line++)
+            {
+                /* 音色データ発見？ */
+                if (lptr[line].status == _SET_HARD_EFFECT)
+                {
+                    no = lptr[line].param;              /* エフェクト番号取得 */
+                    buf = lptr[line].str;
+                    ptr = 0;
+                    ptr++;                              /* '{'の分を飛ばす */
+                    if (hard_effect_tbl[no][0] != 0)
+                    {
+                        dispWarning((int)enmSys.THIS_NUMBER_IS_ALREADY_USED, lptr[line].filename, line);
+                    }
+                    hard_effect_tbl[no][0] = 0;
+                    offset = 0;
+                    i = 1;
+                    end_flag = 0;
+                    while (end_flag == 0)
+                    {
+                        ptr = str.skipSpace(buf, ptr);
+                        char c = (ptr < buf.Length) ? buf[ptr] : '\0';
+                        switch (c)
+                        {
+                            case '}':
+                                if (hard_effect_tbl[no][0] == 4)
+                                {
+                                    //OK.
+                                }
+                                else
+                                {
+                                    dispError((int)enmErrNum.PARAMETER_IS_LACKING, lptr[line].filename, line);
+                                    hard_effect_tbl[no][0] = 0;
+                                }
+                                end_flag = 1;
+                                line += offset;
+                                break;
+                            case '\0':
+                                offset++;
+                                if (line + offset < lptr.Length)
+                                {
+                                    if ((lptr[line + offset].status & _SAME_LINE) == _SAME_LINE)
+                                    {
+                                        buf = lptr[line + offset].str;
+                                        ptr = 0;
+                                    }
+                                }
+                                else
+                                {
+                                    dispError((int)enmErrNum.LFO_DEFINITION_IS_WRONG, lptr[line].filename, line);
+                                    hard_effect_tbl[no][0] = 0;
+                                    end_flag = 1;
+                                }
+                                break;
+                            default:
+                                num = str.Asc2Int(buf, ptr, ref cnt);
+                                if (cnt != 0)
+                                {
+                                    switch (i)
+                                    {
+                                        case 1:
+                                            if (0 <= num && num <= 255)
+                                            {
+                                                hard_effect_tbl[no][i] = num;
+                                                hard_effect_tbl[no][0]++;
+                                                ptr += cnt;
+                                                i++;
+                                            }
+                                            else
+                                            {
+                                                dispError((int)enmErrNum.LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
+                                                hard_effect_tbl[no][0] = 0;
+                                                end_flag = 1;
+                                            }
+                                            break;
+                                        case 2:
+                                            if (0 <= num && num <= 4095)
+                                            {
+                                                hard_effect_tbl[no][i] = num;
+                                                hard_effect_tbl[no][0]++;
+                                                ptr += cnt;
+                                                i++;
+                                            }
+                                            else
+                                            {
+                                                dispError((int)enmErrNum.LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
+                                                hard_effect_tbl[no][0] = 0;
+                                                end_flag = 1;
+                                            }
+                                            break;
+                                        case 3:
+                                            if (0 <= num && num <= 255)
+                                            {
+                                                hard_effect_tbl[no][i] = num;
+                                                hard_effect_tbl[no][0]++;
+                                                ptr += cnt;
+                                                i++;
+                                            }
+                                            else
+                                            {
+                                                dispError((int)enmErrNum.LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
+                                                hard_effect_tbl[no][0] = 0;
+                                                end_flag = 1;
+                                            }
+                                            break;
+                                        case 4:
+                                            if (0 <= num && num <= 7)
+                                            {
+                                                hard_effect_tbl[no][i] = num;
+                                                hard_effect_tbl[no][0]++;
+                                                ptr += cnt;
+                                                i++;
+                                            }
+                                            else
+                                            {
+                                                dispError((int)enmErrNum.LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
+                                                hard_effect_tbl[no][0] = 0;
+                                                end_flag = 1;
+                                            }
+                                            break;
+                                        default:
+                                            dispError((int)enmErrNum.LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
+                                            hard_effect_tbl[no][0] = 0;
+                                            end_flag = 1;
+                                            break;
+                                    }
+                                }
+                                else
+                                {
+                                    dispError((int)enmErrNum.LFO_DEFINITION_IS_WRONG, lptr[line + offset].filename, line);
+                                    hard_effect_tbl[no][0] = 0;
+                                    end_flag = 1;
+                                }
+                                break;
+                        }
+                        ptr = str.skipSpace(buf, ptr);
+                        c = (ptr < buf.Length) ? buf[ptr] : '\0';
+                        if (c == ',')
+                        {
+                            ptr++;
+                        }
+                    }
+                    /* 音色定義だけど_SAME_LINEの時はエラー */
+                }
+                else if (lptr[line].status == (_SET_HARD_EFFECT | unchecked((int)_SAME_LINE)))
+                {
+                    dispError((int)enmErrNum.LFO_DEFINITION_IS_WRONG, lptr[line].filename, line);
+                    /* インクルードファイル処理 */
+                }
+                else if (lptr[line].status == _INCLUDE)
+                {
+                    getHardEffect(lptr[line].inc_ptr);
+                }
+            }
+        }
 
 
 
-        //    /*--------------------------------------------------------------
-        //        エフェクト波形の取得
-        //     Input:
+        /*--------------------------------------------------------------
+            エフェクト波形の取得
+         Input:
 
-        //     Output:
-        //        無し
-        //    --------------------------------------------------------------*/
-        //    void getEffectWave(LINE* lptr)
-        //    {
-        //        int line, i, no, end_flag, offset, num, cnt;
-        //        char* ptr;
+         Output:
+            無し
+        --------------------------------------------------------------*/
+        private void getEffectWave(LINE[] lptr)
+        {
+            int line, i, no, end_flag, offset, num, cnt;
+            string buf; int ptr;
 
-        //        cnt = 0;
+            cnt = 0;
 
-        //        for (line = 1; line <= lptr->line; line++)
-        //        {
-        //            /* 音色データ発見？ */
-        //            if (lptr[line].status == _SET_EFFECT_WAVE)
-        //            {
-        //                no = lptr[line].param;              /* 波形番号取得 */
-        //                ptr = lptr[line].str;
-        //                ptr++;                              /* '{'の分を飛ばす */
-        //                if (effect_wave_tbl[no][0] != 0)
-        //                {
-        //                    dispWarning(THIS_NUMBER_IS_ALREADY_USED, lptr[line].filename, line);
-        //                }
-        //                effect_wave_tbl[no][0] = 0;
-        //                offset = 0;
-        //                i = 1;
-        //                end_flag = 0;
-        //                while (end_flag == 0)
-        //                {
-        //                    ptr = skipSpace(ptr);
-        //                    switch (*ptr)
-        //                    {
-        //                        case '}':
-        //                            if (effect_wave_tbl[no][0] == 32)
-        //                            {
-        //                                //OK.
-        //                            }
-        //                            else
-        //                            {
-        //                                dispError(PARAMETER_IS_LACKING, lptr[line].filename, line);
-        //                                effect_wave_tbl[no][0] = 0;
-        //                            }
-        //                            end_flag = 1;
-        //                            line += offset;
-        //                            break;
-        //                        case '\0':
-        //                            offset++;
-        //                            if (line + offset <= lptr->line)
-        //                            {
-        //                                if ((lptr[line + offset].status & _SAME_LINE) == _SAME_LINE)
-        //                                {
-        //                                    ptr = lptr[line + offset].str;
-        //                                }
-        //                            }
-        //                            else
-        //                            {
-        //                                dispError(EFFECT_WAVE_DEFINITION_IS_WRONG, lptr[line].filename, line + offset);
-        //                                effect_wave_tbl[no][0] = 0;
-        //                                line += offset;
-        //                                end_flag = 1;
-        //                            }
-        //                            break;
-        //                        default:
-        //                            num = Asc2Int(ptr, &cnt);
-        //                            if (cnt != 0 && (0 <= num && num <= 7))
-        //                            {
-        //                                effect_wave_tbl[no][i] = num;
-        //                                effect_wave_tbl[no][0]++;
-        //                                ptr += cnt;
-        //                                i++;
-        //                                if (i > 33)
-        //                                {
-        //                                    dispError(EFFECT_WAVE_DEFINITION_IS_WRONG, lptr[line + offset].filename, line + offset);
-        //                                    effect_wave_tbl[no][0] = 0;
-        //                                    line += offset;
-        //                                    end_flag = 1;
-        //                                }
-        //                            }
-        //                            else
-        //                            {
-        //                                dispError(EFFECT_WAVE_DEFINITION_IS_WRONG, lptr[line + offset].filename, line + offset);
-        //                                effect_wave_tbl[no][0] = 0;
-        //                                line += offset;
-        //                                end_flag = 1;
-        //                            }
-        //                            break;
-        //                    }
-        //                    ptr = skipSpace(ptr);
-        //                    if (*ptr == ',')
-        //                    {
-        //                        ptr++;
-        //                    }
-        //                }
-        //                /* 音色定義だけど_SAME_LINEの時はエラー */
-        //            }
-        //            else if (lptr[line].status == (_SET_EFFECT_WAVE | _SAME_LINE))
-        //            {
-        //                dispError(EFFECT_WAVE_DEFINITION_IS_WRONG, lptr[line].filename, line);
-        //                /* インクルードファイル処理 */
-        //            }
-        //            else if (lptr[line].status == _INCLUDE)
-        //            {
-        //                getEffectWave(lptr[line].inc_ptr);
-        //            }
-        //        }
-        //    }
+            for (line = 1; line < lptr.Length; line++)
+            {
+                /* 音色データ発見？ */
+                if (lptr[line].status == _SET_EFFECT_WAVE)
+                {
+                    no = lptr[line].param;              /* 波形番号取得 */
+                    buf = lptr[line].str;
+                    ptr = 0;
+                    ptr++;                              /* '{'の分を飛ばす */
+                    if (effect_wave_tbl[no][0] != 0)
+                    {
+                        dispWarning((int)enmSys.THIS_NUMBER_IS_ALREADY_USED, lptr[line].filename, line);
+                    }
+                    effect_wave_tbl[no][0] = 0;
+                    offset = 0;
+                    i = 1;
+                    end_flag = 0;
+                    while (end_flag == 0)
+                    {
+                        ptr = str.skipSpace(buf, ptr);
+                        char c = (ptr < buf.Length) ? buf[ptr] : '\0';
+                        switch (c)
+                        {
+                            case '}':
+                                if (effect_wave_tbl[no][0] == 32)
+                                {
+                                    //OK.
+                                }
+                                else
+                                {
+                                    dispError((int)enmErrNum.PARAMETER_IS_LACKING, lptr[line].filename, line);
+                                    effect_wave_tbl[no][0] = 0;
+                                }
+                                end_flag = 1;
+                                line += offset;
+                                break;
+                            case '\0':
+                                offset++;
+                                if (line + offset < lptr.Length)
+                                {
+                                    if ((lptr[line + offset].status & _SAME_LINE) == _SAME_LINE)
+                                    {
+                                        buf = lptr[line + offset].str;
+                                        ptr = 0;
+                                    }
+                                }
+                                else
+                                {
+                                    dispError((int)enmErrNum.EFFECT_WAVE_DEFINITION_IS_WRONG, lptr[line].filename, line + offset);
+                                    effect_wave_tbl[no][0] = 0;
+                                    line += offset;
+                                    end_flag = 1;
+                                }
+                                break;
+                            default:
+                                num = str.Asc2Int(buf, ptr, ref cnt);
+                                if (cnt != 0 && (0 <= num && num <= 7))
+                                {
+                                    effect_wave_tbl[no][i] = num;
+                                    effect_wave_tbl[no][0]++;
+                                    ptr += cnt;
+                                    i++;
+                                    if (i > 33)
+                                    {
+                                        dispError((int)enmErrNum.EFFECT_WAVE_DEFINITION_IS_WRONG, lptr[line + offset].filename, line + offset);
+                                        effect_wave_tbl[no][0] = 0;
+                                        line += offset;
+                                        end_flag = 1;
+                                    }
+                                }
+                                else
+                                {
+                                    dispError((int)enmErrNum.EFFECT_WAVE_DEFINITION_IS_WRONG, lptr[line + offset].filename, line + offset);
+                                    effect_wave_tbl[no][0] = 0;
+                                    line += offset;
+                                    end_flag = 1;
+                                }
+                                break;
+                        }
+                        ptr = str.skipSpace(buf, ptr);
+                        c = (ptr < buf.Length) ? buf[ptr] : '\0';
+                        if (c == ',')
+                        {
+                            ptr++;
+                        }
+                    }
+                    /* 音色定義だけど_SAME_LINEの時はエラー */
+                }
+                else if (lptr[line].status == (_SET_EFFECT_WAVE | unchecked((int)_SAME_LINE)))
+                {
+                    dispError((int)enmErrNum.EFFECT_WAVE_DEFINITION_IS_WRONG, lptr[line].filename, line);
+                    /* インクルードファイル処理 */
+                }
+                else if (lptr[line].status == _INCLUDE)
+                {
+                    getEffectWave(lptr[line].inc_ptr);
+                }
+            }
+        }
 
 
 
@@ -3951,28 +3985,26 @@ namespace MoonDriverDotNET.Compiler
 
 
 
-        //    /*--------------------------------------------------------------
-        //        音色の使用個数を返す
-        //     Input:
+        /*--------------------------------------------------------------
+            音色の使用個数を返す
+         Input:
 
-        //     Output:
-        //        int	: 一番大きい音色番号
-        //    --------------------------------------------------------------*/
-        //    int getMaxTone(int ptr[128][66], int max)
-        //    {
-        //        int i, ret;
-
-        //        ret = 0;
-
-        //        for (i = 0; i < max; i++)
-        //        {
-        //            if (ptr[i][0] != 0)
-        //            {
-        //                ret = i + 1;
-        //            }
-        //        }
-        //        return ret;
-        //    }
+         Output:
+            int	: 一番大きい音色番号
+        --------------------------------------------------------------*/
+        private int getMaxTone(int[][] ptr, int max)//[128][66]
+        {
+            int i, ret;
+            ret = 0;
+            for (i = 0; i < max; i++)
+            {
+                if (ptr[i][0] != 0)
+                {
+                    ret = i + 1;
+                }
+            }
+            return ret;
+        }
 
         /*--------------------------------------------------------------
             ToneTableの使用個数を返す
@@ -4018,27 +4050,26 @@ namespace MoonDriverDotNET.Compiler
 
 
 
-        //    /*--------------------------------------------------------------
-        //        LFOの使用個数を返す
-        //     Input:
+        /*--------------------------------------------------------------
+            LFOの使用個数を返す
+         Input:
 
-        //     Output:
-        //        int	: 一番大きいLFO番号
-        //    --------------------------------------------------------------*/
-        //    int getMaxLFO(int ptr[_PITCH_MOD_MAX][5], int max)
-        //    {
-        //        int i, ret;
-
-        //        ret = 0;
-        //        for (i = 0; i < max; i++)
-        //        {
-        //            if (ptr[i][0] != 0)
-        //            {
-        //                ret = i + 1;
-        //            }
-        //        }
-        //        return ret;
-        //    }
+         Output:
+            int	: 一番大きいLFO番号
+        --------------------------------------------------------------*/
+        private int getMaxLFO(int[][] ptr, int max)//[_PITCH_MOD_MAX][5]
+        {
+            int i, ret;
+            ret = 0;
+            for (i = 0; i < max; i++)
+            {
+                if (ptr[i][0] != 0)
+                {
+                    ret = i + 1;
+                }
+            }
+            return ret;
+        }
 
 
 
@@ -4065,53 +4096,53 @@ namespace MoonDriverDotNET.Compiler
 
 
 
-        //    /*--------------------------------------------------------------
-        //        ハードウェアエフェクトの使用個数を返す
-        //     Input:
+        /*--------------------------------------------------------------
+            ハードウェアエフェクトの使用個数を返す
+         Input:
 
-        //     Output:
-        //        int	: 一番大きい音色番号
-        //    --------------------------------------------------------------*/
-        //    int getMaxHardEffect(int ptr[_HARD_EFFECT_MAX][5], int max)
-        //    {
-        //        int i, ret;
+         Output:
+            int	: 一番大きい音色番号
+        --------------------------------------------------------------*/
+        private int getMaxHardEffect(int[][] ptr, int max)//[_HARD_EFFECT_MAX][5]
+        {
+            int i, ret;
 
-        //        ret = 0;
+            ret = 0;
 
-        //        for (i = 0; i < max; i++)
-        //        {
-        //            if (ptr[i][0] != 0)
-        //            {
-        //                ret = i + 1;
-        //            }
-        //        }
-        //        return ret;
-        //    }
+            for (i = 0; i < max; i++)
+            {
+                if (ptr[i][0] != 0)
+                {
+                    ret = i + 1;
+                }
+            }
+            return ret;
+        }
 
 
 
-        //    /*--------------------------------------------------------------
-        //        エフェクト波形の使用個数を返す
-        //     Input:
+        /*--------------------------------------------------------------
+            エフェクト波形の使用個数を返す
+         Input:
 
-        //     Output:
-        //        int	: 一番大きい音色番号
-        //    --------------------------------------------------------------*/
-        //    int getMaxEffectWave(int ptr[_EFFECT_WAVE_MAX][33], int max)
-        //    {
-        //        int i, ret;
+         Output:
+            int	: 一番大きい音色番号
+        --------------------------------------------------------------*/
+        private int getMaxEffectWave(int[][] ptr, int max)//[_EFFECT_WAVE_MAX][33]
+        {
+            int i, ret;
 
-        //        ret = 0;
+            ret = 0;
 
-        //        for (i = 0; i < max; i++)
-        //        {
-        //            if (ptr[i][0] != 0)
-        //            {
-        //                ret = i + 1;
-        //            }
-        //        }
-        //        return ret;
-        //    }
+            for (i = 0; i < max; i++)
+            {
+                if (ptr[i][0] != 0)
+                {
+                    ret = i + 1;
+                }
+            }
+            return ret;
+        }
 
 
 
@@ -4548,75 +4579,90 @@ namespace MoonDriverDotNET.Compiler
 
 
 
-        //    /*--------------------------------------------------------------
-        //        ハードウェアエフェクトの書き込み
-        //     Input:
+        /*--------------------------------------------------------------
+            ハードウェアエフェクトの書き込み
+         Input:
 
-        //     Output:
-        //        無し
-        //    --------------------------------------------------------------*/
-        //    void writeHardEffect(FILE* fp, int tbl[_HARD_EFFECT_MAX][5], char* str, int max)
-        //    {
-        //        int i;
+         Output:
+            無し
+        --------------------------------------------------------------*/
+        private void writeHardEffect(List<MmlDatum2> fp, int[][] tbl, string str, int max)//[_HARD_EFFECT_MAX][5]
+        {
+            int i;
+            string t;
+            byte b1, b2, b3;
 
-        //        fprintf(fp, "%s_effect_select:\n", str);
-        //        for (i = 0; i < max; i++)
-        //        {
-        //            fprintf(fp, "\tdb\t$%02x,$84,$%02x,$85,$00,$87,$80,$88\n",
-        //                tbl[i][1], (tbl[i][3] | 0x80));
-        //            fprintf(fp, "\tdb\t$%02x,$86,$%02x,$87,$%02x,$ff,$00,$00\n",
-        //                tbl[i][4], (tbl[i][2] & 0x00FF), ((tbl[i][2] & 0x0F00) >> 8));
-        //        }
-        //    }
+            t = string.Format("{0}_effect_select:", str);
+            fp.Add(new MmlDatum2(string.Format("{0}\n", t), -2, t));
+            for (i = 0; i < max; i++)
+            {
+                b1 = (byte)tbl[i][1];
+                b2 = (byte)(tbl[i][3] | 0x80);
+                fp.Add(new MmlDatum2(string.Format("\tdb\t${0:x02},$84,${1:x02},$85,$00,$87,$80,$88\n", b1, b2)
+                    , -1, b1, -1, 0x84, -1, b2, -1, 0x85, -1, 0x00, -1, 0x87, -1, 0x80, -1, 0x88));
+                b1 = (byte)tbl[i][4];
+                b2 = (byte)(tbl[i][2] & 0x00ff);
+                b3 = (byte)((tbl[i][2] % 0x0f00) >> 8);
+                fp.Add(new MmlDatum2(string.Format("\tdb\t${0:x02},$86,${1:x02},$87,${2:x02},$ff,$00,$00\n", b1, b2, b3)
+                    , -1, b1, -1, 0x86, -1, b2, -1, 0x87, -1, b3, -1, 0xff, -1, 0x00, -1, 0x00));
+            }
+        }
 
-        //    /*--------------------------------------------------------------
-        //        エフェクト波形の書き込み
-        //     Input:
+        /*--------------------------------------------------------------
+            エフェクト波形の書き込み
+         Input:
 
-        //     Output:
-        //        無し
-        //    --------------------------------------------------------------*/
-        //    void writeEffectWave(FILE* fp, int tbl[_EFFECT_WAVE_MAX][33], char* str, int max)
-        //    {
-        //        int i, j, x;
+         Output:
+            無し
+        --------------------------------------------------------------*/
+        private void writeEffectWave(List<MmlDatum2> fp, int[][] tbl, string str , int max)//[_EFFECT_WAVE_MAX][33]
+        {
+            int i, j, x;
+            string t;
+            byte b1;
 
-        //        fprintf(fp, "%s_4088_data:\n", str);
-        //        for (i = 0; i < max; i++)
-        //        {
-        //            if (tbl[i][0] != 0)
-        //            {
-        //                x = 0;
-        //                for (j = 1; j <= tbl[i][0]; j++)
-        //                {               // tbl[i][0] = データー量(byte)
-        //                    if (x == 0)
-        //                    {
-        //                        fprintf(fp, "\tdb\t$%02x", tbl[i][j] & 0xff);
-        //                        x++;
-        //                    }
-        //                    else if (x == 7)
-        //                    {
-        //                        fprintf(fp, ",$%02x\n", tbl[i][j] & 0xff);
-        //                        x = 0;
-        //                    }
-        //                    else
-        //                    {
-        //                        fprintf(fp, ",$%02x", tbl[i][j] & 0xff);
-        //                        x++;
-        //                    }
-        //                }
-        //            }
-        //            else
-        //            {
-        //                /* ダミーデータを出力 */
-        //                for (j = 0; j < 4; j++)
-        //                {
-        //                    fprintf(fp, "\tdb\t$00,$00,$00,$00,$00,$00,$00,$00\n");
-        //                }
-        //            }
-        //        }
+            t = string.Format("{0}_4088_data:", str);
+            fp.Add(new MmlDatum2(string.Format("{0}\n", t), -2, t));
+            for (i = 0; i < max; i++)
+            {
+                if (tbl[i][0] != 0)
+                {
+                    x = 0;
+                    for (j = 1; j <= tbl[i][0]; j++)
+                    {               // tbl[i][0] = データー量(byte)
+                        if (x == 0)
+                        {
+                            b1 = (byte)(tbl[i][j] & 0xff);
+                            fp.Add(new MmlDatum2(string.Format("\tdb\t${0:x02}", b1), -1, b1));
+                            x++;
+                        }
+                        else if (x == 7)
+                        {
+                            b1 = (byte)(tbl[i][j] & 0xff);
+                            fp.Add(new MmlDatum2(string.Format(",${0:x02}\n", b1), -1, b1));
+                            x = 0;
+                        }
+                        else
+                        {
+                            b1 = (byte)(tbl[i][j] & 0xff);
+                            fp.Add(new MmlDatum2(string.Format(",${0:x02}", b1), -1, b1));
+                            x++;
+                        }
+                    }
+                }
+                else
+                {
+                    /* ダミーデータを出力 */
+                    for (j = 0; j < 4; j++)
+                    {
+                        fp.Add(new MmlDatum2("\tdb\t$00,$00,$00,$00,$00,$00,$00,$00\n"
+                            , -1, 0x00, -1, 0x00, -1, 0x00, -1, 0x00, -1, 0x00, -1, 0x00, -1, 0x00, -1, 0x00));
+                    }
+                }
+            }
 
-        //        fprintf(fp, "\n\n");
-        //    }
+            fp.Add(new MmlDatum2("\n\n", 0));
+        }
 
 
 
@@ -8576,10 +8622,10 @@ namespace MoonDriverDotNET.Compiler
                 //}
 
                 getTone(line_ptr[mml_idx]);
-                //getEnvelope(line_ptr[mml_idx]);
+                getEnvelope(line_ptr[mml_idx]);
                 getPitchEnv(line_ptr[mml_idx]);
-                //getPitchMod(line_ptr[mml_idx]);
-                //getArpeggio(line_ptr[mml_idx]);
+                getPitchMod(line_ptr[mml_idx]);
+                getArpeggio(line_ptr[mml_idx]);
                 //getDPCM(line_ptr[mml_idx]);
                 //getXPCM(line_ptr[mml_idx]);
                 //getFMTone(line_ptr[mml_idx]);
@@ -8588,21 +8634,21 @@ namespace MoonDriverDotNET.Compiler
                 getOPL3tbl(line_ptr[mml_idx]);
                 //getVRC7Tone(line_ptr[mml_idx]);
                 //getN106Tone(line_ptr[mml_idx]);
-                //getHardEffect(line_ptr[mml_idx]);
-                //getEffectWave(line_ptr[mml_idx]);
+                getHardEffect(line_ptr[mml_idx]);
+                getEffectWave(line_ptr[mml_idx]);
             }
 
             tone_max = checkLoop(tone_tbl, _TONE_MAX);
             envelope_max = checkLoop(envelope_tbl, _ENVELOPE_MAX);
             pitch_env_max = checkLoop(pitch_env_tbl, _PITCH_ENV_MAX);
-            //    pitch_mod_max = getMaxLFO(pitch_mod_tbl, _PITCH_MOD_MAX);
+            pitch_mod_max = getMaxLFO(pitch_mod_tbl, _PITCH_MOD_MAX);
             arpeggio_max = checkLoop(arpeggio_tbl, _ARPEGGIO_MAX);
             //    dpcm_max = getMaxDPCM(dpcm_tbl);
             //    fm_tone_max = getMaxTone(fm_tone_tbl, _FM_TONE_MAX);
             //    n106_tone_max = getMaxTone(n106_tone_tbl, _N106_TONE_MAX);
             //    vrc7_tone_max = getMaxTone(vrc7_tone_tbl, _VRC7_TONE_MAX);
-            //    hard_effect_max = getMaxHardEffect(hard_effect_tbl, _HARD_EFFECT_MAX);
-            //    effect_wave_max = getMaxEffectWave(effect_wave_tbl, _EFFECT_WAVE_MAX);
+            hard_effect_max = getMaxHardEffect(hard_effect_tbl, _HARD_EFFECT_MAX);
+            effect_wave_max = getMaxEffectWave(effect_wave_tbl, _EFFECT_WAVE_MAX);
 
             //    xpcm_max = getMaxDPCM(xpcm_tbl);
             //    wtb_tone_max = getMaxTone(wtb_tone_tbl, _WTB_TONE_MAX);
@@ -8653,37 +8699,40 @@ namespace MoonDriverDotNET.Compiler
             {
 
 
-                ///* 音色書き込み */
+                /* 音色書き込み */
                 writeTone(efFp, tone_tbl, "dutyenve", tone_max);
-                ///* エンベロープ書き込み */
+                /* エンベロープ書き込み */
                 writeTone(efFp, envelope_tbl, "softenve", envelope_max);
                 /* ピッチエンベロープ書き込み */
                 writeTone(efFp, pitch_env_tbl, "pitchenve", pitch_env_max);
-                ///* ノートエンベロープ書き込み */
+                /* ノートエンベロープ書き込み */
                 writeTone(efFp, arpeggio_tbl, "arpeggio", arpeggio_max);
-                ///* LFO書き込み */
-                //fprintf(fp, "lfo_data:\n");
-                //if (pitch_mod_max != 0)
-                //{
-                //    for (i = 0; i < pitch_mod_max; i++)
-                //    {
-                //        if (pitch_mod_tbl[i][0] != 0)
-                //        {
-                //            fprintf(fp, "\tdb\t$%02x,$%02x,$%02x,$%02x\n",
-                //                pitch_mod_tbl[i][1], pitch_mod_tbl[i][2],
-                //                pitch_mod_tbl[i][3], pitch_mod_tbl[i][4]);
-                //        }
-                //        else
-                //        {
-                //            fprintf(fp, "\tdb\t$00,$00,$00,$00\n");
-                //        }
-                //    }
-                //    fprintf(fp, "\n");
-                //}
+                /* LFO書き込み */
+                efFp.Add(new MmlDatum2("lfo_data:\n",-2, "lfo_data:"));
+                if (pitch_mod_max != 0)
+                {
+                    for (i = 0; i < pitch_mod_max; i++)
+                    {
+                        if (pitch_mod_tbl[i][0] != 0)
+                        {
+                            byte b1 = (byte)pitch_mod_tbl[i][1];
+                            byte b2 = (byte)pitch_mod_tbl[i][2];
+                            byte b3 = (byte)pitch_mod_tbl[i][3];
+                            byte b4 = (byte)pitch_mod_tbl[i][4];
+                            efFp.Add(new MmlDatum2(string.Format("\tdb\t$%02x,$%02x,$%02x,$%02x\n", b1, b2, b3, b4)
+                                , -1, b1, -1, b2, -1, b3, -1, b4));
+                        }
+                        else
+                        {
+                            efFp.Add(new MmlDatum2("\tdb\t$00,$00,$00,$00\n", -1, 0x00, -1, 0x00, -1, 0x00, -1, 0x00));
+                        }
+                    }
+                    efFp.Add(new MmlDatum2("\n", 0));
+                }
                 ///* FM音色書き込み */
                 //writeToneFM(fp, fm_tone_tbl, "fds", fm_tone_max);
-                //writeHardEffect(fp, hard_effect_tbl, "fds", hard_effect_max);
-                //writeEffectWave(fp, effect_wave_tbl, "fds", effect_wave_max);
+                writeHardEffect(efFp, hard_effect_tbl, "fds", hard_effect_max);
+                writeEffectWave(efFp, effect_wave_tbl, "fds", effect_wave_max);
                 ///* namco106音色書き込み */
                 //writeToneN106(fp, n106_tone_tbl, "n106", n106_tone_max);
                 efFp.Add(new MmlDatum2("db 0;dummy N106_channel\n", -1, 0));
@@ -8944,6 +8993,7 @@ namespace MoonDriverDotNET.Compiler
             }
             //else
             {
+                //アセンブル
                 Assemble asm = new Assemble();
                 List<List<MmlDatum2>> dest = asm.build(wk, efFp, oufp, infp);
                 List<MmlDatum2> des = new List<MmlDatum2>();
@@ -8964,6 +9014,14 @@ namespace MoonDriverDotNET.Compiler
                 }
 
                 wk.destBuf = des.ToArray();
+
+            }
+
+            //PCM Pack
+            if (compiler.doPackPCM)
+            {
+                PcmPack pk = new PcmPack();
+                wk.destBuf = pk.Pack(new List<MmlDatum2>(wk.destBuf), wk.in_name, compiler.pcmFileName).ToArray();
             }
 
 

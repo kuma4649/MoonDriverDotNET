@@ -11,9 +11,11 @@ namespace MoonDriverDotNET.Compiler
     public class Compiler : iCompiler
     {
         public iEncoding enc = null;
-        public string[] mckArgs = null;
+        public string[] args = null;
         public string[] env { get; set; }
         public bool isSrc = false;
+        public bool doPackPCM = false;
+        public string pcmFileName = "";
 
         //内部
         private string srcBuf = null;
@@ -65,7 +67,7 @@ namespace MoonDriverDotNET.Compiler
             work.srcBuf = srcBuf;
 
             mck mck = new mck();
-            MmlDatum[] ret = mck.main(this, mckArgs, work, env);
+            MmlDatum[] ret = mck.main(this, args, work, env);
             return ret;
         }
 
@@ -114,9 +116,17 @@ namespace MoonDriverDotNET.Compiler
 
                 if (!(prm is string)) continue;
 
-                if((string)prm=="SRC")
+                if ((string)prm == "SRC")
                 {
                     this.isSrc = true;
+                }
+
+                //PCMPACK指定の場合は単独で指定する必要あり
+                if ((string)prm == "PCMPACK")
+                {
+                    this.doPackPCM = true;
+                    this.pcmFileName = (string)param[1];
+                    return;
                 }
 
                 //IDEフラグオン
@@ -141,19 +151,6 @@ namespace MoonDriverDotNET.Compiler
                     }
                 }
 
-                //mck option 指定
-                if (((string)prm).IndexOf("PmdOption=") == 0)
-                {
-                    try
-                    {
-                        string[] p = ((string)prm).Split('=')[1].Split(' ');
-                        mckArgs = p;
-                    }
-                    catch
-                    {
-                        continue;
-                    }
-                }
             }
         }
 

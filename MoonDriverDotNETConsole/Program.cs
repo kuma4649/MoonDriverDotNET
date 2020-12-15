@@ -16,6 +16,9 @@ namespace MoonDriverDotNET.Console
         private static string desFile;
         private static bool isXml = false;
         private static bool isSrc = false;
+        private static bool doPackPcm = false;
+        private static string pcmFileName = "";
+
         private static Common.Environment env = null;
 
         static void Main(string[] args)
@@ -63,7 +66,7 @@ namespace MoonDriverDotNET.Console
 
                 Compiler.Compiler compiler = new Compiler.Compiler();
                 compiler.Init();
-                compiler.mckArgs = lstArg.ToArray();
+                compiler.args = lstArg.ToArray();
 
                 env = new Common.Environment();
                 //env.AddEnv("arranger");
@@ -75,7 +78,7 @@ namespace MoonDriverDotNET.Console
 
                 //各種ファイルネームを得る
                 int s = 0;
-                foreach (string arg in compiler.mckArgs)
+                foreach (string arg in compiler.args)
                 {
                     if (string.IsNullOrEmpty(arg)) continue;
                     if (arg[0] == '-' || arg[0] == '/') continue;
@@ -93,6 +96,7 @@ namespace MoonDriverDotNET.Console
 
                 //DotNETオプションの設定
                 if (isSrc) compiler.SetCompileSwitch("SRC");
+                if (doPackPcm) compiler.SetCompileSwitch("PCMPACK", pcmFileName);
 #if DEBUG
                 compiler.SetCompileSwitch("IDE");
                 //compiler.SetCompileSwitch("SkipPoint=R60:C13");
@@ -134,8 +138,8 @@ namespace MoonDriverDotNET.Console
                             Log.WriteLine(LogLevel.TRACE, string.Format("{0}\t: {1}", tag.Item1, tag.Item2));
 #endif
                             //出力ファイル名を得る
-                            if (tag.Item1.ToUpper().IndexOf("#FI") != 0) continue;//mcは3文字まで判定している為
-                            outFileName = tag.Item2;
+                            //if (tag.Item1.ToUpper().IndexOf("#FI") != 0) continue;//mcは3文字まで判定している為
+                            //outFileName = tag.Item2;
                         }
                     }
 
@@ -234,7 +238,7 @@ namespace MoonDriverDotNET.Console
                 , arg
                 );
 
-            string[] envPaths = env.GetEnvVal("pmd");
+            string[] envPaths = env.GetEnvVal("moondriver");
             if (envPaths != null)
             {
                 int i = 0;
@@ -304,6 +308,18 @@ namespace MoonDriverDotNET.Console
                 else if (op == "SRC")
                 {
                     isSrc = true;
+                }
+                else if (op.IndexOf("PCMPACK")>=0)
+                {
+                    try
+                    {
+                        pcmFileName = op.Split(":")[1];
+                    }
+                    catch
+                    {
+                        pcmFileName = "";
+                    }
+                    doPackPcm = true;
                 }
                 else
                 {

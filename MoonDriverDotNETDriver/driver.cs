@@ -72,7 +72,7 @@ namespace MoonDriverDotNET.Driver
             {
                 byte[] srcBuf = File.ReadAllBytes(fileName);
                 if (srcBuf == null || srcBuf.Length < 1) return;
-                Init(srcBuf, oPNAWrite, sampleRate,
+                Init(fileName, srcBuf, oPNAWrite, sampleRate,
                     dop, vs,
                     appendFileReaderCallback ?? CreateAppendFileReaderCallback(Path.GetDirectoryName(fileName))
                     );
@@ -83,7 +83,7 @@ namespace MoonDriverDotNET.Driver
                 using (StreamReader sr = new StreamReader(fileName, new UTF8Encoding(false)))
                 {
                     MmlDatum[] s = (MmlDatum[])serializer.Deserialize(sr);
-                    Init(s, oPNAWrite,sampleRate,
+                    Init(fileName, s, oPNAWrite,sampleRate,
                         dop, vs, appendFileReaderCallback ?? CreateAppendFileReaderCallback(Path.GetDirectoryName(fileName))
                         );
                 }
@@ -92,6 +92,7 @@ namespace MoonDriverDotNET.Driver
         }
 
         public void Init(
+            string fileName,
             byte[] srcBuf,
             Action<ChipDatum> opnaWrite,
             double sampleRate,
@@ -102,11 +103,12 @@ namespace MoonDriverDotNET.Driver
             if (srcBuf == null || srcBuf.Length < 1) return;
             List<MmlDatum> bl = new List<MmlDatum>();
             foreach (byte b in srcBuf) bl.Add(new MmlDatum(b));
-            Init(bl.ToArray(), opnaWrite,sampleRate,
+            Init(fileName, bl.ToArray(), opnaWrite,sampleRate,
                 addtionalPMDDotNETOption, addtionalPMDOption, appendFileReaderCallback);
         }
 
         public void Init(
+            string fileName,
             MmlDatum[] srcBuf,
             Action<ChipDatum> opl4Write,
             double sampleRate,
@@ -133,8 +135,17 @@ namespace MoonDriverDotNET.Driver
             //テストコード
             List<byte> bl = new List<byte>();
             foreach (MmlDatum b in srcBuf) bl.Add((byte)b.dat);
+            string pcmFn = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName)+".pcm");
+            byte[] pcmData = null;
+            using (Stream s = appendFileReaderCallback(pcmFn))
+            {
+                pcmData = Common.Common.ReadAllBytes(s);
+            }
+
+            //
 
             md = new MoonDriver();
+            if (pcmData != null) md.ExtendFile = new Tuple<string, byte[]>(pcmFn, pcmData);
             md.init(bl.ToArray(), WriteRegister, sampleRate);
 
             //if (!string.IsNullOrEmpty(pmd.pw.ppz1File) || !string.IsNullOrEmpty(pmd.pw.ppz2File)) pmd.pcmload.ppz_load(pmd.pw.ppz1File, pmd.pw.ppz2File);
