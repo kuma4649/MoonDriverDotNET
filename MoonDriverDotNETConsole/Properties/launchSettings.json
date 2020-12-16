@@ -2,7 +2,7 @@
   "profiles": {
     "MoonDriverDotNETConsole": {
       "commandName": "Project",
-      "commandLineArgs": "-SRC -PCMPack:PAROST2.PCM -i C:\\test\\PAROST2.MML "
+      "commandLineArgs": "-SRC -PCMPack:Valkyrie.PCM -i C:\\test\\Valkyrie.MML "
     }
   }
 }

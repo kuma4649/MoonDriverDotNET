@@ -1904,7 +1904,7 @@ namespace MoonDriverDotNET.Compiler
                                 line += offset;
                                 break;
                             case '|':
-                                pitch_env_tbl[no][i] = (int)enmEFTBL.LOOP;
+                                envelope_tbl[no][i] = (int)enmEFTBL.LOOP;
                                 envelope_tbl[no][0]++;
                                 i++;
                                 ptr++;
@@ -7064,10 +7064,11 @@ namespace MoonDriverDotNET.Compiler
          Output:
             無し
         --------------------------------------------------------------*/
+        string fn = "";
+        int ln = 0;
+
         private void putAsm(List<MmlDatum2> fp, int data)
         {
-            string fn = "";
-            int ln = 0;
             string t;
             int b;
 
