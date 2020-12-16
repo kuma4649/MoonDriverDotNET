@@ -7184,7 +7184,7 @@ namespace MoonDriverDotNET.Compiler
         --------------------------------------------------------------*/
         private int double2int(double d)
         {
-            return (int)(d + 0.5);
+            return (int)Math.Round(d, MidpointRounding.AwayFromZero); //(d + 0.5);
         }
 
 
@@ -7625,7 +7625,7 @@ namespace MoonDriverDotNET.Compiler
                                     lframe += rframe * (cmd[cmdPtr].param[0] - 2) + rframe_esc;
                                 }
                                 /* フレーム補正 */
-                                rframe_err = double2int(count_t * tbase) - frame;
+                                rframe_err = double2int((double)((decimal)count_t * (decimal)tbase))  - frame;//(count_t * tbase)-frame
                                 //printf( "frame-error: %d frame\n", rframe_err );
                                 if (rframe_err > 0)
                                 {
@@ -7674,7 +7674,7 @@ namespace MoonDriverDotNET.Compiler
                                 count_t += cmd[cmdPtr].len;
                                 rcount_t += cmd[cmdPtr].len;
                                 frame_p = rframe;
-                                rframe = double2int(rcount_t * tbase);
+                                rframe = double2int((double)((decimal)rcount_t * (decimal)tbase)); ;// (rcount_t * tbase);
                                 frame_d = rframe - frame_p;
                                 count += cmd[cmdPtr].len;
                                 frame += frame_d;
@@ -7728,7 +7728,7 @@ namespace MoonDriverDotNET.Compiler
                     {
                         count_t += cmd[cmdPtr].len;
                         frame_p = frame;
-                        frame = double2int(count_t * tbase);
+                        frame = double2int((double)((decimal)count_t * (decimal)tbase));
                         frame_d = frame - frame_p;
                         count += cmd[cmdPtr].len;
                         /* 対ループずれ対策 */
@@ -7747,7 +7747,7 @@ namespace MoonDriverDotNET.Compiler
                     else if (cmd[cmdPtr].cmd == (int)enmMML._TEMPO2)
                     {
                         tbase_p = tbase;
-                        tbase = (double)cmd[cmdPtr].param[0] * (double)cmd[cmdPtr].param[1] / _BASE;
+                        tbase = (double)cmd[cmdPtr].param[0] * (double)cmd[cmdPtr].param[1] / (double)_BASE;
                         count_t = count_t * tbase_p / tbase;
                     }
                     else if (cmd[cmdPtr].cmd == (int)enmMML._SONG_LOOP)
