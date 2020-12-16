@@ -2,7 +2,7 @@
   "profiles": {
     "MoonDriverDotNETConsole": {
       "commandName": "Project",
-      "commandLineArgs": "-SRC -PCMPack:TIMESUP_.PCM -i C:\\test\\TIMESUP.MML "
+      "commandLineArgs": "-SRC -PCMPack:PAROST2.PCM -i C:\\test\\PAROST2.MML "
     }
   }
 }

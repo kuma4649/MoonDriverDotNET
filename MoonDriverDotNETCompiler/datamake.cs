@@ -1430,24 +1430,26 @@ namespace MoonDriverDotNET.Compiler
                         //    case _NO_BANKSWITCH:
                         //        allow_bankswitching = 0;
                         //        break;
-                        //    /* 自動バンク切り替え */
-                        //    case _AUTO_BANKSWITCH:
-                        //        temp = skipSpace(lptr[line].str);
-                        //        param = Asc2Int(temp, &cnt);
-                        //        if (cnt != 0 && (0 <= param && param <= 8192))
-                        //        {
-                        //            // 最初の一回しか有効にしない
-                        //            if (!auto_bankswitch)
-                        //            {
-                        //                bank_usage[0] = 8192 - param;
-                        //            }
-                        //            auto_bankswitch = 1;
-                        //        }
-                        //        else
-                        //        {
-                        //            dispError(DEFINITION_IS_WRONG, lptr[line].filename, line);
-                        //        }
-                        //        break;
+                        /* 自動バンク切り替え */
+                        case _AUTO_BANKSWITCH:
+                            temp = lbuf[lptr + line].str;
+                            tempPtr = str.skipSpaceOld(lbuf[line].str, lptr); /* /をとばさないようにしてみる */
+                            cnt = 0;
+                            param = str.Asc2Int(temp, tempPtr, ref cnt);
+                            if (cnt != 0 && (0 <= param && param <= 8192))
+                            {
+                                // 最初の一回しか有効にしない
+                                if (auto_bankswitch==0)
+                                {
+                                    bank_usage[0] = 8192 - param;
+                                }
+                                auto_bankswitch = 1;
+                            }
+                            else
+                            {
+                                dispError((int)enmErrNum.DEFINITION_IS_WRONG, lbuf[lptr + line].filename, line);
+                            }
+                            break;
                         //    /* バンク切り替え埋め込み(暫定処理の互換措置) */
                         //    case _BANK_CHANGE:
                         //        /*
