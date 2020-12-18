@@ -44,6 +44,7 @@ MoonDriverDotNETはMITライセンスとします。
  本ツールは以下の方々にお世話になっております。また以下のソフトウェア、ウェブページを参考、使用しています。  
  ・ぼうきち さん  
  ・Manbow-J さん  
+ ・ゆみちゃん さん  
 
  ・moon_driver/mmckc  
  ・Visual Studio Community 2019  

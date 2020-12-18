@@ -119,17 +119,22 @@ namespace MoonDriverDotNET.Compiler
             m.fp = start_pos;
 
             int block_len = 0;
-            int pcm_blocks = 0;
+            int pcm_blocks = 1;
 
             int i = 0;
             while (i < pcmBuf.Length)
             {
                 MmlDatum2 md = new MmlDatum2("", pcmBuf[i]);
                 destBuf.Insert(m.fp + i, md);
-
                 i++;
-                if ((i % BANK_SIZE) == 0) pcm_blocks++;
+                block_len++;
+                if ((i % BANK_SIZE) == 0)
+                {
+                    pcm_blocks++;
+                    block_len = 0;
+                }
             }
+            if (pcmBuf.Length > 0 && block_len == 0) pcm_blocks--;
 
             m.pcm_packed = 1;
             m.pcm_startadrs = 0x20; // SRAM開始アドレス

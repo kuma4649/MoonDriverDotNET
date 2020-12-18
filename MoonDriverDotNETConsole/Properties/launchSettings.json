@@ -2,7 +2,7 @@
   "profiles": {
     "MoonDriverDotNETConsole": {
       "commandName": "Project",
-      "commandLineArgs": "-SRC -PCMPack:Valkyrie.PCM -i C:\\test\\Valkyrie.MML "
+      "commandLineArgs": "-SRC -PCMPack:ff5_203.PCM -i C:\\test\\ff5_203.MML "
     }
   }
 }
