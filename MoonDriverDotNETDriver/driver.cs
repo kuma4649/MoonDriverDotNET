@@ -82,10 +82,16 @@ namespace MoonDriverDotNET.Driver
                 XmlSerializer serializer = new XmlSerializer(typeof(MmlDatum[]), typeof(MmlDatum[]).GetNestedTypes());
                 using (StreamReader sr = new StreamReader(fileName, new UTF8Encoding(false)))
                 {
-                    MmlDatum[] s = (MmlDatum[])serializer.Deserialize(sr);
-                    Init(fileName, s, oPNAWrite,sampleRate,
-                        dop, vs, appendFileReaderCallback ?? CreateAppendFileReaderCallback(Path.GetDirectoryName(fileName))
-                        );
+                    try
+                    {
+                        MmlDatum[] s = (MmlDatum[])serializer.Deserialize(sr);
+                        Init(fileName, s, oPNAWrite, sampleRate,
+                            dop, vs, appendFileReaderCallback ?? CreateAppendFileReaderCallback(Path.GetDirectoryName(fileName))
+                            );
+                    }
+                    catch (System.InvalidOperationException e)
+                    {
+                    }
                 }
 
             }
@@ -129,12 +135,6 @@ namespace MoonDriverDotNET.Driver
             //work.SetOption(addtionalPMDDotNETOption, addtionalPMDOption);
             //work.timer = new OPNATimer(44100, 7987200);
 
-            //PPZ8em ppz8em = addtionalPMDDotNETOption.ppz8em;
-            //PPSDRV ppsdrv = addtionalPMDDotNETOption.ppsdrv;
-
-            //テストコード
-            List<byte> bl = new List<byte>();
-            foreach (MmlDatum b in srcBuf) bl.Add((byte)b.dat);
             string pcmFn = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName)+".pcm");
             byte[] pcmData = null;
             using (Stream s = appendFileReaderCallback(pcmFn))
@@ -146,7 +146,7 @@ namespace MoonDriverDotNET.Driver
 
             md = new MoonDriver();
             if (pcmData != null) md.ExtendFile = new Tuple<string, byte[]>(pcmFn, pcmData);
-            md.init(bl.ToArray(), WriteRegister, sampleRate);
+            md.init(srcBuf, WriteRegister, sampleRate);
 
             //if (!string.IsNullOrEmpty(pmd.pw.ppz1File) || !string.IsNullOrEmpty(pmd.pw.ppz2File)) pmd.pcmload.ppz_load(pmd.pw.ppz1File, pmd.pw.ppz2File);
 

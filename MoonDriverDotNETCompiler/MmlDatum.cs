@@ -5,6 +5,7 @@ using System.Text;
 
 namespace MoonDriverDotNET.Compiler
 {
+    [Serializable]
     public class MmlDatum2 : MmlDatum
     {
         public string code;
@@ -58,6 +59,17 @@ namespace MoonDriverDotNET.Compiler
                 d += "\n";
             }
             return string.Format("{0} : {1}{2}", c, base.ToString(), d);
+        }
+
+        public MmlDatum ToMmlDatumn()
+        {
+            MmlDatum md = new MmlDatum();
+            md.args = this.args;
+            md.dat = this.dat;
+            md.linePos = this.linePos;
+            md.type = this.type;
+
+            return md;
         }
     }
 }

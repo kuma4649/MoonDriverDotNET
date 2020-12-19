@@ -19,15 +19,15 @@ namespace MoonDriverDotNET.Driver
         private int TotalCounter;
         private int LoopCounter;
         private double vgmSpeedCounter;
-        private byte[] vgmBuf;
+        private MmlDatum[] vgmBuf;
 
-        public GD3 getGD3Info(byte[] buf, uint vgmGd3)
+        public GD3 getGD3Info(MmlDatum[] buf, uint vgmGd3)
         {
 
             GD3 gd3 = new GD3();
 
             uint adrTag;
-            adrTag = (UInt16)(buf[0x2e] + buf[0x2f] * 0x100);
+            adrTag = (UInt16)(buf[0x2e].dat + buf[0x2f].dat * 0x100);
             if (adrTag != 0)
             {
                 adrTag -= 0x8000;
@@ -47,7 +47,7 @@ namespace MoonDriverDotNET.Driver
             return gd3;
         }
 
-        public bool init(byte[] vgmBuf, Action<ChipDatum> WriteOPL4Register ,double SampleRate)
+        public bool init(MmlDatum[] vgmBuf, Action<ChipDatum> WriteOPL4Register ,double SampleRate)
         {
             Log.WriteLine(LogLevel.INFO, string.Format("MoonDriver  Orig. {0} Programed by BouKiCHi",version));
             Log.WriteLine(LogLevel.INFO, string.Format("MoonDriverDotNET  VER yymmdd Programed by Kuma"));
@@ -87,7 +87,7 @@ namespace MoonDriverDotNET.Driver
 
             a = 0;
             change_page3();
-            a = ReadMemory(MDR_PACKED);
+            a = (byte)ReadMemory(MDR_PACKED).dat;
             if (a == 0)
             {
                 if (ExtendFile != null)
@@ -874,16 +874,16 @@ namespace MoonDriverDotNET.Driver
 
         private void get_table_hl_2de()
         {
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             hl++;
-            hl = (UInt16)(ReadMemory(hl) * 0x100 + a);
+            hl = (UInt16)((byte)ReadMemory(hl).dat * 0x100 + a);
 
             hl += e;
             hl += e;
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             hl++;
-            hl = (UInt16)(ReadMemory(hl) * 0x100 + a);
+            hl = (UInt16)((byte)ReadMemory(hl).dat * 0x100 + a);
         }
 
         //********************************************
@@ -896,13 +896,12 @@ namespace MoonDriverDotNET.Driver
             a = work.seq_cur_ch;
             e = a;
             d = 0x00;
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             hl++;
-
-            hl = (UInt16)(ReadMemory(hl) * 0x100 + a);
+            hl = (UInt16)((byte)ReadMemory(hl).dat * 0x100 + a);
             hl += e;
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
         }
 
         //********************************************
@@ -917,7 +916,7 @@ namespace MoonDriverDotNET.Driver
             change_page3(); //Page to Top
 
 
-            a = ReadMemory(S_DEVICE_FLAGS);
+            a = (byte)ReadMemory(S_DEVICE_FLAGS).dat;
             if (a == 0) a = 1;//OPL4 by default
             b = a;
             iy = 0;// fm_opbtbl;
@@ -1217,7 +1216,7 @@ namespace MoonDriverDotNET.Driver
                 {
                     // Read command from memory
                     set_page3_ch();
-                    a = ReadMemory(hl);
+                    a = (byte)ReadMemory(hl).dat;
                     hl++;
 
                     if (CP_CF(0xe0))
@@ -1236,7 +1235,7 @@ namespace MoonDriverDotNET.Driver
                     //bc = seq_jmptable;
                     //hl += (UInt16)((b << 8) + c);
                     // Read address from table
-                    //a = ReadMemory(hl);
+                    //a = (byte)ReadMemory(hl).dat;
                     //hl++;
                     //hl = (UInt16)(ReadMemory(hl) * 0x100);
                     //hl = (UInt16)((hl & 0xff00) + a);
@@ -1283,7 +1282,7 @@ namespace MoonDriverDotNET.Driver
             }
             if (a == 0)
             {
-                a = ReadMemory(hl);// read repeat counter
+                a = (byte)ReadMemory(hl).dat;// read repeat counter
             }
 
             //seq_skip_set_repcnt_end:
@@ -1304,7 +1303,7 @@ namespace MoonDriverDotNET.Driver
 
             if (a == 0)
             {
-                a = ReadMemory(hl);// read repeat counter
+                a = (byte)ReadMemory(hl).dat;// read repeat counter
             }
 
             //seq_skip_set_repcnt_esc:
@@ -1387,7 +1386,7 @@ namespace MoonDriverDotNET.Driver
 
             // note length
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
 
             work.ch[ix].cnt = a;
             hl++;
@@ -1399,7 +1398,7 @@ namespace MoonDriverDotNET.Driver
         private void read_cmd_length()
         {
             // pop af
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             work.ch[ix].cnt = a;
             hl++;
             seq_next();
@@ -1794,7 +1793,7 @@ namespace MoonDriverDotNET.Driver
         private void seq_volume()
         {
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             work.ch[ix].venv = a;
 
             if ((0x80 & a) == 0)
@@ -1828,9 +1827,9 @@ namespace MoonDriverDotNET.Driver
 
             if (work.ch[ix].cnt == 255)
             {
-                byte vee = ReadMemory(hl);
-                byte v00 = ReadMemory((UInt16)(hl + 1));
-                UInt16 adr = (UInt16)(ReadMemory((UInt16)(hl + 2)) + ReadMemory((UInt16)(hl + 3)) * 0x100);
+                byte vee = (byte)ReadMemory(hl).dat;
+                byte v00 = (byte)ReadMemory((UInt16)(hl + 1)).dat;
+                UInt16 adr = (UInt16)(ReadMemory((UInt16)(hl + 2)).dat + ReadMemory((UInt16)(hl + 3)).dat * 0x100);
                 if (vee == 0xee && v00 == 0x00 && hl - 2 == adr)
                 {
                     work.ch[ix].endFlg = true;
@@ -1840,7 +1839,7 @@ namespace MoonDriverDotNET.Driver
 
         private void seq_detune()
         {
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
 
             work.ch[ix].detune = a;
             hl++;
@@ -1848,7 +1847,7 @@ namespace MoonDriverDotNET.Driver
 
         private void seq_penv()
         {
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
 
             hl++;
             work.ch[ix].penv = a;
@@ -1860,7 +1859,7 @@ namespace MoonDriverDotNET.Driver
 
         private void seq_nenv()
         {
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
 
             hl++;
             work.ch[ix].nenv = a;
@@ -1873,11 +1872,11 @@ namespace MoonDriverDotNET.Driver
 
         private void seq_data_write()
         {
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             d = a;// Address Low
             hl++;
 
-            a = ReadMemory(hl);// Address High
+            a = (byte)ReadMemory(hl).dat;// Address High
             if (a == 0)
             {
                 write_data_cur_fm();// (a >> 8) == 0
@@ -1912,7 +1911,7 @@ namespace MoonDriverDotNET.Driver
         {
             hl++;
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
 
             e = a;// Data
             hl++;
@@ -1928,7 +1927,7 @@ namespace MoonDriverDotNET.Driver
         {
             hl++;
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
 
             e = a;// Data
             hl++;
@@ -1939,7 +1938,7 @@ namespace MoonDriverDotNET.Driver
         {
             hl++;
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
 
             e = a;// Data
             hl++;
@@ -1950,7 +1949,7 @@ namespace MoonDriverDotNET.Driver
         {
             hl++;
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
 
             e = a;// Data
             hl++;
@@ -1964,7 +1963,7 @@ namespace MoonDriverDotNET.Driver
 
         private void seq_drum()
         {
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
 
             a &= 0x1f;
 
@@ -1986,7 +1985,7 @@ namespace MoonDriverDotNET.Driver
         {
             // drums key-off
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             a &= 0x1f;
             a ^= 0xff;
 
@@ -2002,7 +2001,7 @@ namespace MoonDriverDotNET.Driver
 
             // set fnum
             UInt16 hlb = hl;
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             a &= 0x1f;
 
             c = 0;
@@ -2040,7 +2039,7 @@ namespace MoonDriverDotNET.Driver
             if (a == 0)
             {
                 // drums key-on
-                a = ReadMemory(hl);
+                a = (byte)ReadMemory(hl).dat;
                 a &= 0x1f;
                 e = a;
                 a = work.seq_reg_bd;
@@ -2054,7 +2053,7 @@ namespace MoonDriverDotNET.Driver
 
             //drumbit_skip_keyon:
             // length check
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             a &= 0x80;// Lxxxxxxx L = the command has length
             if (a != 0)
             {
@@ -2101,12 +2100,12 @@ namespace MoonDriverDotNET.Driver
         private void seq_drumnote()
         {
             // set fnum
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             a &= 0x1f;
 
             byte af = a;
             hl++;
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             work.seq_tmp_note = a;
             hl++;
             a = af;
@@ -2177,7 +2176,7 @@ namespace MoonDriverDotNET.Driver
         private void seq_inst()
         {
             //pop hl
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             byte af = a;
             UInt16 hlb;
             a = 0;
@@ -2224,13 +2223,13 @@ namespace MoonDriverDotNET.Driver
             if (a == 0)
             {
                 //seq_pan_opl4:
-                a = ReadMemory(hl);
+                a = (byte)ReadMemory(hl).dat;
                 work.ch[ix].pan = a;
             }
             else
             {
                 //seq_pan_fm:
-                a = ReadMemory(hl);
+                a = (byte)ReadMemory(hl).dat;
                 a &= 0xf;
                 a = (byte)((a << 1) + (((a & 0x80) != 0) ? 1 : 0)); //rlca
                 a = (byte)((a << 1) + (((a & 0x80) != 0) ? 1 : 0)); //rlca
@@ -2247,26 +2246,26 @@ namespace MoonDriverDotNET.Driver
 
         private void seq_lfosw()
         {
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             work.ch[ix].lfo = a;
             hl++;
         }
 
         private void seq_bank()
         {
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             hl++;
 
             byte af = a;
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             hl++;
-            hl = (UInt16)(ReadMemory(hl) * 0x100 + a);
+            hl = (UInt16)((byte)ReadMemory(hl).dat * 0x100 + a);
 
             a = 0;
             change_page3();
-            UInt16 ltbl = (UInt16)(ReadMemory(S_LOOP_TABLE) + ReadMemory(S_LOOP_TABLE + 1) * 0x100 + ix * 2);
-            ltbl = (UInt16)(ReadMemory(ltbl) + ReadMemory((UInt16)(ltbl + 1)) * 0x100);
+            UInt16 ltbl = (UInt16)((byte)ReadMemory(S_LOOP_TABLE).dat + (byte)ReadMemory(S_LOOP_TABLE + 1).dat * 0x100 + ix * 2);
+            ltbl = (UInt16)(ReadMemory(ltbl).dat + ReadMemory((UInt16)(ltbl + 1)).dat * 0x100);
             if (hl == ltbl)
             {
                 work.ch[ix].loopCnt += (work.ch[ix].loopCnt == int.MaxValue) ? 0 : 1;
@@ -2286,12 +2285,12 @@ namespace MoonDriverDotNET.Driver
             if (a == 0)
             {
                 //seq_damp_opl4:
-                a = ReadMemory(hl);
+                a = (byte)ReadMemory(hl).dat;
                 work.ch[ix].damp = a;
             }
             else
             {
-                a = ReadMemory(hl);
+                a = (byte)ReadMemory(hl).dat;
                 a &= 0x3f;
                 e = a;
                 d = 0x4;
@@ -2304,7 +2303,7 @@ namespace MoonDriverDotNET.Driver
 
         private void seq_revbsw()
         {
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             work.ch[ix].reverb = a;
             hl++;
         }
@@ -2316,7 +2315,7 @@ namespace MoonDriverDotNET.Driver
 
         private void seq_setop()
         {
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             work.ch[ix].opsel = a;
             hl++;
         }
@@ -2331,7 +2330,7 @@ namespace MoonDriverDotNET.Driver
             }
 
             //seq_ld2ops_fm:
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             byte af = a;
             a = 0;
             change_page3();
@@ -2355,7 +2354,7 @@ namespace MoonDriverDotNET.Driver
 
         private void seq_tvp()
         {
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             a &= 0x7;
 
             a = (byte)((a >> 1) + ((a & 1) != 0 ? 0x80 : 0));//rrca
@@ -2375,7 +2374,7 @@ namespace MoonDriverDotNET.Driver
 
         private void seq_fbs()
         {
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             a &= 0x7;
 
             a = (byte)((a << 1) + ((a & 0x80) != 0 ? 1 : 0));//rlca
@@ -2392,7 +2391,7 @@ namespace MoonDriverDotNET.Driver
 
         private void seq_jump()
         {
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             work.seq_jump_flag = a;
             hl++;
         }
@@ -2538,7 +2537,7 @@ namespace MoonDriverDotNET.Driver
             a = 0;
             change_page3();
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             byte af = a;
             set_page3_ch();
             a = af;
@@ -2686,11 +2685,11 @@ namespace MoonDriverDotNET.Driver
             work.seq_opsel = a;
 
             // FBS store to IDX_SYNTH(OxxFFFSS )
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             a &= 0x0e;
             a = (byte)((a << 1) + (((a & 0x80) != 0) ? 1 : 0)); //rlca
             e = a;
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             a &= 0x01;
             a |= e;
             e = a;
@@ -2713,7 +2712,7 @@ namespace MoonDriverDotNET.Driver
             else
             {
                 // FBS-2  Store SynthType for 4OP
-                a = ReadMemory(hl);
+                a = (byte)ReadMemory(hl).dat;
                 a &= 0x01;
                 a = (byte)((a << 1) + (((a & 0x80) != 0) ? 1 : 0)); //rlca
                 a |= 0x80;// 4OP flag
@@ -2764,7 +2763,7 @@ namespace MoonDriverDotNET.Driver
             int i = 0;
             do
             {
-                a = ReadMemory(hl);
+                a = (byte)ReadMemory(hl).dat;
                 work.ch[ix].ol[i] = a;//.ar_d1r = a;
                 i++;// ix++;
                 hl += (UInt16)((d << 8) + e);
@@ -2779,31 +2778,31 @@ namespace MoonDriverDotNET.Driver
 
         private void moon_set_fmop()
         {
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             e = a;
             d = 0x20;
             moon_write_fmop();
             hl++;
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             e = a;
             d = 0x40;
             moon_write_fmop();// OL
             hl++;
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             e = a;
             d = 0x60;
             moon_write_fmop();
             hl++;
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             e = a;
             d = 0x80;
             moon_write_fmop();
             hl++;
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             e = a;
             d = 0xe0;
             moon_write_fmop();
@@ -2826,9 +2825,9 @@ namespace MoonDriverDotNET.Driver
                 af = a;
                 UInt16 hlb = hl;
 
-                a = ReadMemory(hl);
+                a = (byte)ReadMemory(hl).dat;
                 hl++;
-                a |= ReadMemory(hl);
+                a |= (byte)ReadMemory(hl).dat;
 
                 if (a == 0)
                 {
@@ -2841,7 +2840,7 @@ namespace MoonDriverDotNET.Driver
                 hl = hlb;
                 a = af;
 
-                if (a - ReadMemory(hl) < 0)
+                if (a - (byte)ReadMemory(hl).dat < 0)
                 {
                     //tonesel_skip01();// if a<(hl)
                     hl++;
@@ -2850,7 +2849,7 @@ namespace MoonDriverDotNET.Driver
                 else
                 {
                     hl++;
-                    if (a - ReadMemory(hl) <= 0)
+                    if (a - (byte)ReadMemory(hl).dat <= 0)
                     {
                         //tonesel_loadtone();// if a<(hl)
                         break;
@@ -2866,37 +2865,37 @@ namespace MoonDriverDotNET.Driver
             //tonesel_loadtone:
             af = a;
             hl++;
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             work.ch[ix].tone = a;
             hl++;
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             work.ch[ix].tone += (UInt16)(a << 8);
             hl++;
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             work.ch[ix].p_ofs = a;
             hl++;
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             work.ch[ix].p_ofs += (UInt16)(a << 8);
             hl++;
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             work.ch[ix].lfo_vib = a;
             hl++;
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             work.ch[ix].ol[0] = a;//.ar_d1r = a;
             hl++;
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             work.ch[ix].ol[1] = a;//.dl_d2r = a;
             hl++;
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             work.ch[ix].ol[2] = a;//.rc_rr = a;
             hl++;
 
-            a = ReadMemory(hl);
+            a = (byte)ReadMemory(hl).dat;
             work.ch[ix].ol[3] = a;//.am = a;
             hl++;
 
@@ -3729,7 +3728,7 @@ namespace MoonDriverDotNET.Driver
         private void moon_reset_sram_adrs()
         {
 
-            a = ReadMemory(MDR_DSTPCM);
+            a = (byte)ReadMemory(MDR_DSTPCM).dat;
 
             MDB_BASE[MDB_ADRHI] = a;
             a = 0;
@@ -3891,7 +3890,7 @@ namespace MoonDriverDotNET.Driver
             change_page3();
 
             // is PCM packed song file?
-            a = ReadMemory(MDR_PACKED);
+            a = (byte)ReadMemory(MDR_PACKED).dat;
             // output status for debug
             MDB_BASE[MDB_LDFLAG] = a;
 
@@ -3959,17 +3958,17 @@ namespace MoonDriverDotNET.Driver
             moon_reset_sram_adrs();
 
             // PCM number of banks
-            a = ReadMemory(MDR_PCMBANKS);
+            a = (byte)ReadMemory(MDR_PCMBANKS).dat;
 
             moon_pcm_numbanks = a;
             moon_pcm_bank_count = a;
 
             // size of lastbank
-            a = ReadMemory(MDR_LASTS);
+            a = (byte)ReadMemory(MDR_LASTS).dat;
             moon_pcm_lastsize = a;
 
             // size of start page
-            a = ReadMemory(MDR_STPCM);
+            a = (byte)ReadMemory(MDR_STPCM).dat;
             moon_pcm_bank = a;
 
             // start of source address
@@ -4022,7 +4021,7 @@ namespace MoonDriverDotNET.Driver
                 //pcm_copy_lp:
                 do
                 {
-                    a = ReadMemory(hl);
+                    a = (byte)ReadMemory(hl).dat;
                     e = a;
                     d = 0x06;
 
@@ -4079,8 +4078,8 @@ namespace MoonDriverDotNET.Driver
             }
         }
 
-        private byte[] mem = new byte[1024 * 64];
-        private byte[][] extMem = new byte[256][];
+        private MmlDatum[] mem = new MmlDatum[1024 * 64];
+        private MmlDatum[][] extMem = new MmlDatum[256][];
         private byte? seg0x0000 = null;
         private byte? seg0x4000 = null;
         private byte? seg0x8000 = null;
@@ -4096,7 +4095,7 @@ namespace MoonDriverDotNET.Driver
         private delegate void dlgSeqFunc();
         private dlgSeqFunc[] seq_jmptable = null;
 
-        private byte ReadMemory(UInt16 adr)
+        private MmlDatum ReadMemory(UInt16 adr)
         {
             switch (adr >> 14)
             {
@@ -4105,30 +4104,30 @@ namespace MoonDriverDotNET.Driver
                     if (seg0x0000 == null)
                         return mem[adr];
                     if (extMem[(byte)seg0x0000] == null)
-                        extMem[(byte)seg0x0000] = new byte[1024 * 16];
+                        extMem[(byte)seg0x0000] = new MmlDatum[1024 * 16];
                     return extMem[(byte)seg0x0000][adr & 0x3fff];
                 case 1://0x4000 - 0x7fff
                     if (seg0x4000 == null)
                         return mem[adr];
                     if (extMem[(byte)seg0x4000] == null)
-                        extMem[(byte)seg0x4000] = new byte[1024 * 16];
+                        extMem[(byte)seg0x4000] = new MmlDatum[1024 * 16];
                     return extMem[(byte)seg0x4000][adr & 0x3fff];
                 case 2://0x8000 - 0xbfff
                     if (seg0x8000 == null || seg0x8000 == 0)
                         return mem[adr];
                     if (extMem[(byte)seg0x8000] == null)
-                        extMem[(byte)seg0x8000] = new byte[1024 * 16];
+                        extMem[(byte)seg0x8000] = new MmlDatum[1024 * 16];
                     return extMem[(byte)seg0x8000][adr & 0x3fff];
                 case 3://0xc000 - 0xffff
                     if (seg0xc000 == null)
                         return mem[adr];
                     if (extMem[(byte)seg0xc000] == null)
-                        extMem[(byte)seg0xc000] = new byte[1024 * 16];
+                        extMem[(byte)seg0xc000] = new MmlDatum[1024 * 16];
                     return extMem[(byte)seg0xc000][adr & 0x3fff];
             }
         }
 
-        private void WriteMemory(UInt16 adr, byte dat)
+        private void WriteMemory(UInt16 adr, MmlDatum dat)
         {
             switch (adr >> 14)
             {
@@ -4141,7 +4140,7 @@ namespace MoonDriverDotNET.Driver
                     else
                     {
                         if (extMem[(byte)seg0x0000] == null)
-                            extMem[(byte)seg0x0000] = new byte[1024 * 16];
+                            extMem[(byte)seg0x0000] = new MmlDatum[1024 * 16];
                         extMem[(byte)seg0x0000][adr & 0x3fff] = dat;
                     }
                     break;
@@ -4153,7 +4152,7 @@ namespace MoonDriverDotNET.Driver
                     else
                     {
                         if (extMem[(byte)seg0x4000] == null)
-                            extMem[(byte)seg0x4000] = new byte[1024 * 16];
+                            extMem[(byte)seg0x4000] = new MmlDatum[1024 * 16];
                         extMem[(byte)seg0x4000][adr & 0x3fff] = dat;
                     }
                     break;
@@ -4165,7 +4164,7 @@ namespace MoonDriverDotNET.Driver
                     else
                     {
                         if (extMem[(byte)seg0x8000] == null)
-                            extMem[(byte)seg0x8000] = new byte[1024 * 16];
+                            extMem[(byte)seg0x8000] = new MmlDatum[1024 * 16];
                         extMem[(byte)seg0x8000][adr & 0x3fff] = dat;
                     }
                     break;
@@ -4177,7 +4176,7 @@ namespace MoonDriverDotNET.Driver
                     else
                     {
                         if (extMem[(byte)seg0xc000] == null)
-                            extMem[(byte)seg0xc000] = new byte[1024 * 16];
+                            extMem[(byte)seg0xc000] = new MmlDatum[1024 * 16];
                         extMem[(byte)seg0xc000][adr & 0x3fff] = dat;
                     }
                     break;

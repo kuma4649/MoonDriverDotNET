@@ -382,6 +382,8 @@ namespace MoonDriverDotNET.Player
                 }
             }
 
+            if (!File.Exists(fn)) return null;
+
             FileStream strm;
             try
             {

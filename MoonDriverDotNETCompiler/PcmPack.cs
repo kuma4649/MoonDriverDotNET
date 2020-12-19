@@ -86,6 +86,9 @@ namespace MoonDriverDotNET.Compiler
         // MDRファイル読み出し
         private List<MmlDatum2> packPCMintoMDR(List<MmlDatum2> destBuf, string file, string pcm, ref _mdr m)
         {
+            if (string.IsNullOrEmpty(file)) return destBuf;
+            if (string.IsNullOrEmpty(pcm)) return destBuf;
+
             byte[] bank=new byte[BANK_SIZE];
             Log.WriteLine(LogLevel.INFO, "packing...");
 

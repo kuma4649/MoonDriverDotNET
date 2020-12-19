@@ -67,8 +67,15 @@ namespace MoonDriverDotNET.Compiler
             work.srcBuf = srcBuf;
 
             mck mck = new mck();
-            MmlDatum[] ret = mck.main(this, args, work, env);
-            return ret;
+            List<MmlDatum> ret=new List<MmlDatum>();
+            MmlDatum2[] dest = mck.main(this, args, work, env);
+            //ほしいのはmmlDatumnなのでキャスト(?)して作り直す
+            foreach(MmlDatum2 md2 in dest)
+            {
+                ret.Add(md2 == null ? null : md2.ToMmlDatumn());
+            }
+
+            return ret.ToArray();
         }
 
         public bool Compile(FileStream sourceMML, Stream destCompiledBin, Func<string, Stream> appendFileReaderCallback)

@@ -55,16 +55,16 @@ namespace MoonDriverDotNET.Common
             }
         }
 
-        public static string getNRDString(byte[] buf, ref uint index)
+        public static string getNRDString(MmlDatum[] buf, ref uint index)
         {
             if (buf == null || buf.Length < 1 || index < 0 || index >= buf.Length) return "";
 
             try
             {
                 List<byte> lst = new List<byte>();
-                for (; buf[index] != 0; index++)
+                for (; buf[index].dat != 0; index++)
                 {
-                    lst.Add(buf[index]);
+                    lst.Add((byte)buf[index].dat);
                 }
 
                 string n = System.Text.Encoding.GetEncoding(932).GetString(lst.ToArray());
