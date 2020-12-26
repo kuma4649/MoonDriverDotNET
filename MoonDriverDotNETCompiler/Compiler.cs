@@ -19,10 +19,12 @@ namespace MoonDriverDotNET.Compiler
 
         //内部
         private string srcBuf = null;
+        public string origpath = null;
         private bool isIDE = false;
         private Point skipPoint = Point.Empty;
         private Func<string, Stream> appendFileReaderCallback;
         public work work = new work();
+        public mck mck = null;
 
 
         public Compiler(iEncoding enc = null)
@@ -34,6 +36,7 @@ namespace MoonDriverDotNET.Compiler
         {
             this.isIDE = false;
             this.skipPoint = Point.Empty;
+            this.args = null;
         }
 
         public MmlDatum[] Compile(Stream sourceMML, Func<string, Stream> appendFileReaderCallback)
@@ -66,11 +69,18 @@ namespace MoonDriverDotNET.Compiler
 
             work.srcBuf = srcBuf;
 
-            mck mck = new mck();
-            List<MmlDatum> ret=new List<MmlDatum>();
+            mck = new mck();
+            List<MmlDatum> ret = new List<MmlDatum>();
+            
+            //if (isIDE)
+            //{
+            //    args = new string[] { "-i", "dummy.mdl" };
+            //}
+
             MmlDatum2[] dest = mck.main(this, args, work, env);
+            if (dest == null || dest.Length < 1) return null;
             //ほしいのはmmlDatumnなのでキャスト(?)して作り直す
-            foreach(MmlDatum2 md2 in dest)
+            foreach (MmlDatum2 md2 in dest)
             {
                 ret.Add(md2 == null ? null : md2.ToMmlDatumn());
             }
@@ -101,12 +111,13 @@ namespace MoonDriverDotNET.Compiler
 
         public CompilerInfo GetCompilerInfo()
         {
-            throw new NotImplementedException();
+            if (mck == null) return null;
+            return mck.GetCompilerInfo();
         }
 
         public GD3Tag GetGD3TagInfo(byte[] srcBuf)
         {
-            throw new NotImplementedException();
+            return null;
         }
 
         public void SetCompileSwitch(params object[] param)
@@ -151,6 +162,43 @@ namespace MoonDriverDotNET.Compiler
                         int r = int.Parse(p[0].Substring(1));
                         int c = int.Parse(p[1].Substring(1));
                         this.skipPoint = new Point(c, r);
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+                }
+
+                //オリジナルファイルの所在
+                if (((string)prm).IndexOf("ORIGPATH=") == 0)
+                {
+                    try
+                    {
+                        this.origpath = ((string)prm).Split('=')[1];
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+                }
+
+                //MoonDriver自体のオプション
+                if (((string)prm).IndexOf("MoonDriverOption=") == 0)
+                {
+                    try
+                    {
+                        string p = ((string)prm).Split('=')[1];
+                        List<string> larg;
+                        if (args != null)
+                        {
+                            larg = new List<string>(args);
+                        }
+                        else
+                        {
+                            larg = new List<string>();
+                        }
+                        larg.Add(p);
+                        args = larg.ToArray();
                     }
                     catch
                     {

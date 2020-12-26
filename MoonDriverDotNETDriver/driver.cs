@@ -1,4 +1,5 @@
-﻿using musicDriverInterface;
+﻿using MoonDriverDotNET.Common;
+using musicDriverInterface;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,10 +10,16 @@ namespace MoonDriverDotNET.Driver
 {
     public class Driver : iDriver
     {
+        private iEncoding enc = null;
         public Exception renderingException = null;
         private MoonDriver md = null;
         static MmlDatum[] srcBuf = null;
         private Action<ChipDatum> WriteOPL4;
+
+        public Driver(iEncoding enc = null)
+        {
+            this.enc = enc ?? myEncoding.Default;
+        }
 
         public void FadeOut()
         {
@@ -152,6 +159,36 @@ namespace MoonDriverDotNET.Driver
 
         }
 
+        public void Init(string fileName
+            , Action<ChipDatum> chipWriteRegister
+            , Action<long, int> chipWaitSend
+            , MmlDatum[] srcBuf
+            , object additionalOption)
+        {
+            if (srcBuf == null || srcBuf.Length < 1) return;
+
+            Driver.srcBuf = srcBuf;
+            WriteOPL4 = chipWriteRegister;
+            object[] addOp = (object[])additionalOption;
+            Func<string, Stream> appendFileReaderCallback = (Func<string, Stream>)addOp[1];
+            double sampleRate = (double)addOp[2];
+
+            GetTags();
+
+            string pcmFn = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + ".pcm");
+            byte[] pcmData = null;
+            using (Stream s = appendFileReaderCallback(pcmFn))
+            {
+                pcmData = Common.Common.ReadAllBytes(s);
+            }
+
+            //
+
+            md = new MoonDriver();
+            if (pcmData != null) md.ExtendFile = new Tuple<string, byte[]>(pcmFn, pcmData);
+            md.init(srcBuf, WriteRegister, sampleRate);
+        }
+
         public void MusicSTART(int musicNumber)
         {
         }
@@ -217,9 +254,5 @@ namespace MoonDriverDotNET.Driver
             };
         }
 
-        public void Init(string fileName, Action<ChipDatum> chipWriteRegister, Action<long, int> chipWaitSend, MmlDatum[] srcBuf, object addtionalOption)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

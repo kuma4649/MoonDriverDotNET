@@ -1,6 +1,7 @@
 ﻿using musicDriverInterface;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace MoonDriverDotNET.Compiler
@@ -234,6 +235,7 @@ namespace MoonDriverDotNET.Compiler
         // PCMファイル
         private string pcm_name = "";//[1024]
         private int use_pcm = 0;
+        private bool pcm_pack = false;
 
         private const string str_track = "ABCDEFGHIJKLMNOPQRSTUVWXabcdefghijklmnopqr";// _TRACK_STR;
 
@@ -487,6 +489,7 @@ namespace MoonDriverDotNET.Compiler
         private const int _EX_OPL3 = 0x31;
         private const int _OPL4_NOUSE = 0x32;
         private const int _PCM_FILE = 0x33;
+        private const int _PCM_PACK = 0x1000;
 
         private const int _TRACK = 0x40;
         private const uint _SAME_LINE = 0x8000_0000;
@@ -703,6 +706,7 @@ namespace MoonDriverDotNET.Compiler
      new HEAD( "@N",                _SET_N106_TONE  ),
      new HEAD( "@V",                _SET_ENVELOPE   ),
      new HEAD( "@",                 _SET_TONE       ),
+     new HEAD( "#PCMPACK",          _PCM_PACK       ),
      new HEAD( "",                  -1              ),
         };
 
@@ -1649,6 +1653,17 @@ namespace MoonDriverDotNET.Compiler
                             tempPtr = str.skipSpaceOld(lbuf[line].str, lptr);
                             pcm_name = temp.Substring(tempPtr);//, 1023);
                             use_pcm = 1;
+                            break;
+                        //PCMPACK
+                        case _PCM_PACK:
+                            temp = lbuf[line].str;
+                            tempPtr = str.skipSpaceOld(lbuf[line].str, lptr);
+                            temp = temp.Substring(tempPtr).Trim().ToUpper();
+                            pcm_pack = false;
+                            if (temp == "ON")
+                            {
+                                pcm_pack = true;
+                            }
                             break;
 
                         /* オクターブ記号の反転 */
@@ -7112,6 +7127,8 @@ namespace MoonDriverDotNET.Compiler
 
         --------------------------------------------------------------*/
         private int[] bank_org_written_flag = new int[128];// = { 1 };
+        private CompilerInfo compilerInfo;
+
         private void putBankOrigin(List<MmlDatum2> fp, int bank)
         {
             int org;
@@ -9026,7 +9043,36 @@ namespace MoonDriverDotNET.Compiler
                 PcmPack pk = new PcmPack();
                 wk.destBuf = pk.Pack(new List<MmlDatum2>(wk.destBuf), wk.in_name, compiler.pcmFileName).ToArray();
             }
+            else if (pcm_pack)
+            {
+                string pcmFn = pcm_name;
+                if (!File.Exists(pcmFn))
+                {
+                    if (compiler.origpath != null) pcmFn = Path.Combine(compiler.origpath, pcm_name);
+                }
+                if (!File.Exists(pcmFn))
+                {
+                    if (wk.in_name != null) pcmFn = Path.Combine(Path.GetDirectoryName(wk.in_name), pcm_name);
+                }
+                if (!File.Exists(pcmFn))
+                {
+                    if (wk.mdr_name != null) pcmFn = Path.Combine(Path.GetDirectoryName(wk.mdr_name), pcm_name);
+                }
+                if (File.Exists(pcmFn))
+                {
+                    PcmPack pk = new PcmPack();
+                    wk.destBuf = pk.Pack(new List<MmlDatum2>(wk.destBuf), pcmFn, pcm_name).ToArray();
+                }
+            }
 
+            compilerInfo = new CompilerInfo();
+            compilerInfo.partName = new List<string>();
+            compilerInfo.partNumber = new List<int>();
+            compilerInfo.partType = new List<string>();
+            compilerInfo.totalCount = new List<int>();
+            compilerInfo.loopCount = new List<int>();
+            compilerInfo.errorList = new List<Tuple<int, int, string>>();
+            compilerInfo.warningList = new List<Tuple<int, int, string>>();
 
             /* 全てのMMLについて */
             for (mml_idx = 0; mml_idx < wk.mml_num; mml_idx++)
@@ -9043,13 +9089,26 @@ namespace MoonDriverDotNET.Compiler
                 for (i = 0; i < _TRACK_MAX; i++)
                 {
                     if (trk_flag[i] != 0)
+                    {
                         display_counts_sub(i, str_track[i]);
+
+                        compilerInfo.partNumber.Add(i);
+                        compilerInfo.partName.Add(str_track[i].ToString());
+                        compilerInfo.partType.Add("FM");
+                        compilerInfo.totalCount.Add(double2int(track_count[mml_idx][i][0].cnt));
+                        compilerInfo.loopCount.Add(double2int(track_count[mml_idx][i][1].cnt));
+                    }
                 }
                 Log.WriteLine(LogLevel.INFO, "-------+-------+-------+-------+-------+");
             }
 
             return 0;
 
+        }
+
+        public CompilerInfo GetCompilerInfo()
+        {
+            return compilerInfo;
         }
 
     }

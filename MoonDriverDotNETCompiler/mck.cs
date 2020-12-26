@@ -9,6 +9,7 @@ namespace MoonDriverDotNET.Compiler
     {
         private Compiler compiler = null;
         private work wk = null;
+        private datamake datamake = null;
 
         //extern void splitPath( const char* ptr, char* path, char* name, char* ext );
         //extern void makePath(char* ptr, const char* path, const char* name, const char* ext );
@@ -226,7 +227,7 @@ namespace MoonDriverDotNET.Compiler
             Log.WriteLine(LogLevel.INFO, string.Format("{0} -> {1}", wk.mml_names[i], wk.out_name));
 
             // コンバート
-            datamake datamake = new datamake(compiler, wk);
+            datamake = new datamake(compiler, wk);
             int ret = datamake.data_make();
             // 終了
 
@@ -260,6 +261,13 @@ namespace MoonDriverDotNET.Compiler
             }
             //return work.EXIT_FAILURE;
             return null;
+        }
+
+        public CompilerInfo GetCompilerInfo()
+        {
+            if (datamake == null) return null;
+            CompilerInfo ci = datamake.GetCompilerInfo();
+            return ci;
         }
     }
 }

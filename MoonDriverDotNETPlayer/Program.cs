@@ -628,7 +628,7 @@ namespace MoonDriverDotNET.Player
 
 #if DEBUG
             //if (dat.address == 0x29)
-            //Log.WriteLine(LogLevel.INFO, string.Format("FM P{2} Out:Adr[{0:x02}] val[{1:x02}]", (int)dat.address, (int)dat.data, dat.port));
+            Log.WriteLine(LogLevel.INFO, string.Format("FM P{2} Out:Adr[{0:x02}] val[{1:x02}]", (int)dat.address, (int)dat.data, dat.port));
 #endif
 
             switch (device)

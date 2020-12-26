@@ -77,7 +77,7 @@ namespace MoonDriverDotNET.Driver
                         a = af;
                         a += 2;
                     }
-                    WriteMemory((UInt16)(0x8000 + (i % 0x4000)), vgmBuf[i]);
+                    WriteMemory((UInt16)(0x8000 + (i % 0x4000)), vgmBuf[i] == null ? new MmlDatum() : vgmBuf[i]);
                 }
             }
             catch (Exception ex)
@@ -4021,7 +4021,9 @@ namespace MoonDriverDotNET.Driver
                 //pcm_copy_lp:
                 do
                 {
-                    a = (byte)ReadMemory(hl).dat;
+                    MmlDatum md = ReadMemory(hl);
+                    if (md == null) a = 0;
+                    else a = (byte)md.dat;
                     e = a;
                     d = 0x06;
 

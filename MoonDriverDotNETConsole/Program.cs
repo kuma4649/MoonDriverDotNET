@@ -309,7 +309,7 @@ namespace MoonDriverDotNET.Console
                 {
                     isSrc = true;
                 }
-                else if (op.IndexOf("PCMPACK")>=0)
+                else if (op.IndexOf("PCMPACK") >= 0)
                 {
                     try
                     {

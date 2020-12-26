@@ -2,7 +2,7 @@
   "profiles": {
     "MoonDriverDotNETConsole": {
       "commandName": "Project",
-      "commandLineArgs": "-SRC -XML -PCMPack:ff5_203.PCM -i C:\\test\\ff5_203.MML "
+      "commandLineArgs": "-SRC -i C:\\test\\ff5_203.MDL "
     }
   }
 }

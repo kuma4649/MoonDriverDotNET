@@ -165,13 +165,13 @@ namespace MoonDriverDotNET.Compiler
             Log.WriteLine(LogLevel.INFO, string.Format("{0} {1} by {2}", PRG_NAME, PRG_VER, PRG_AUTHOR));
 
             mdrfile = mdrFn;
-            Log.writeLine(LogLevel.INFO, string.Format("File:{0}", mdrfile));
+            Log.WriteLine(LogLevel.INFO, string.Format("File:{0}", mdrfile));
             if (!string.IsNullOrEmpty(pcmFn)) pcmfile = pcmFn;
 
             _mdr m = new _mdr();
             readMDRHeader(destBuf, mdrfile, ref m);
 
-            Log.writeLine(LogLevel.INFO, string.Format("Size:{0}", m.size));
+            Log.WriteLine(LogLevel.INFO, string.Format("Size:{0}", m.size));
 
             if (string.IsNullOrEmpty(pcmfile))
             {
